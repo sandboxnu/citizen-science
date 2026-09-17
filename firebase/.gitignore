@@ -67,3 +67,9 @@ node_modules/
 
 # dataconnect generated files
 .dataconnect
+
+# Compiled TypeScript output
+functions/lib/
+
+# AI assistant files
+.agents/
