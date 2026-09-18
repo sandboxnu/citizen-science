@@ -5,4 +5,3 @@ admin.initializeApp();
 setGlobalOptions({maxInstances: 10});
 
 export {pollNWSAlerts} from "./pollNWSAlerts";
-export {submitReport} from "./submitReport";
