@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1049034316797",
+    "project_id": "citizen-science-platform",
+    "storage_bucket": "citizen-science-platform.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1049034316797:android:a38201dec4e963de261794",
+        "android_client_info": {
+          "package_name": "edu.northeastern.sandbox.citizenscience"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCFhj6QbEkO9LcIgNwd1MZnDAoxoIsn5-I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
