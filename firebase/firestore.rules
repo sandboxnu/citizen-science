@@ -19,5 +19,11 @@ service cloud.firestore {
         && resource.data.userId == request.auth.uid;
       allow update, delete: if false;
     }
+
+    // Temporary: lets the mobile app's local emulator connectivity check
+    // read/write without auth. Remove once that check is removed.
+    match /_connectivity_check/{docId} {
+      allow read, write: if true;
+    }
   }
 }

@@ -1,4 +1,6 @@
 import * as Device from 'expo-device';
+import { doc, getDoc, setDoc } from '@react-native-firebase/firestore';
+import { useEffect, useState } from 'react';
 import { Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -8,6 +10,29 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { WebBadge } from '@/components/web-badge';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { firestore } from '@/lib/firebase';
+
+// Temporary: confirms the emulator connection from lib/firebase.ts actually
+// works. Remove once a real Firestore-backed screen exists.
+function useEmulatorConnectionCheck() {
+  const [status, setStatus] = useState('checking emulator connection…');
+
+  useEffect(() => {
+    const ref = doc(firestore, '_connectivity_check', 'ping');
+    setDoc(ref, { pingedAt: Date.now() })
+      .then(() => getDoc(ref))
+      .then((snap) =>
+        setStatus(
+          snap.exists()
+            ? '✅ connected to Firestore emulator'
+            : '❌ write succeeded but read-back failed'
+        )
+      )
+      .catch((err) => setStatus(`❌ ${err.message}`));
+  }, []);
+
+  return status;
+}
 
 function getDevMenuHint() {
   if (Platform.OS === 'web') {
@@ -29,6 +54,8 @@ function getDevMenuHint() {
 }
 
 export default function HomeScreen() {
+  const emulatorStatus = useEmulatorConnectionCheck();
+
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
@@ -37,6 +64,7 @@ export default function HomeScreen() {
           <ThemedText type="title" style={styles.title}>
             Welcome to&nbsp;Expo
           </ThemedText>
+          <ThemedText type="small">{emulatorStatus}</ThemedText>
         </ThemedView>
 
         <ThemedText type="code" style={styles.code}>
