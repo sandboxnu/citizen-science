@@ -10,6 +10,14 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // User profiles are created by each user for themselves on sign-up.
+    // Users can only read, create, and update their own profile.
+    match /users/{userId} {
+      allow read, create, update: if request.auth != null
+        && request.auth.uid == userId;
+      allow delete: if false;
+    }
+
     // Reports are created by authenticated users.
     // Users can only read and create their own reports.
     match /reports/{reportId} {
@@ -18,12 +26,6 @@ service cloud.firestore {
       allow read: if request.auth != null
         && resource.data.userId == request.auth.uid;
       allow update, delete: if false;
-    }
-
-    // Temporary: lets the mobile app's local emulator connectivity check
-    // read/write without auth. Remove once that check is removed.
-    match /_connectivity_check/{docId} {
-      allow read, write: if true;
     }
   }
 }
