@@ -6,7 +6,7 @@ export type SubmitDuringDisasterReportInput = {
   latitude: number;
   longitude: number;
   observedAt: string; // auto-captured, user-editable in the UI
-  photoUrls: string[]; // already-uploaded Storage URLs
+  photoUrls: string[]; // already-uploaded Storage URLs and locations pairs
   description?: string;
 };
 
