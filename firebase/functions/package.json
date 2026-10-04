@@ -9,6 +9,7 @@
     "start": "npm run shell",
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log",
+    "test": "jest",
     "emulators": "firebase emulators:start",
     "seed": "tsx scripts/seed.ts",
     "seed:client": "tsx scripts/seed-client.ts",
@@ -25,6 +26,9 @@
     "gdal-async": "^3.12.3"
   },
   "devDependencies": {
+    "@swc/core": "^1.16.13",
+    "@swc/jest": "^0.2.39",
+    "@types/jest": "^30.0.0",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
     "concurrently": "^9.2.4",
@@ -32,6 +36,7 @@
     "eslint-config-google": "^0.14.0",
     "eslint-plugin-import": "^2.25.4",
     "firebase-functions-test": "^3.4.1",
+    "jest": "^30.5.2",
     "tsx": "^4.23.15",
     "typescript": "^6.0.0",
     "wait-on": "^8.0.5"
