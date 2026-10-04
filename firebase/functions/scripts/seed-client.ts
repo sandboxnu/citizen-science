@@ -1,6 +1,12 @@
 import * as admin from "firebase-admin";
 import * as gdal from 'gdal-async';
 
+// TODO: use this in place of Record<string, unknown> below, and validate
+// records against it before writing (see seed-client.test.ts)
+export interface ClientFloodRecord {
+  geometry: string;
+}
+
 // Points to local emulator — do not change
 process.env.FIRESTORE_EMULATOR_HOST = "127.0.0.1:8080";
 
@@ -37,7 +43,7 @@ async function seed() {
   const batch = db.batch();
 
   Object.entries(clientData).forEach(([id, zone]) => {
-    const ref = db.collection("hazard_zones").doc(id);
+    const ref = db.collection("clientData").doc(id);
     batch.set(ref, {
       ...zone,
       active: true,
@@ -46,7 +52,7 @@ async function seed() {
   });
 
   await batch.commit();
-  console.log(`Seeded ${Object.keys(clientData).length} hazard zones into Firestore.`);
+  console.log(`Seeded ${Object.keys(clientData).length} client records into Firestore.`);
 }
 
 seed().catch(console.error);
