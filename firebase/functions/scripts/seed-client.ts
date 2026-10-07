@@ -16,9 +16,32 @@ const db = admin.firestore();
 
 const MAX_RECORDS = Number(process.env.MAX_RECORDS) || 50
 
-const clientData: Record<string,Record<string, unknown>> = {};
+const clientData: Record<string, ClientFloodRecord> = {};
 
 const dataset = gdal.open("data/Unified_FIM.gpkg");
+
+export function isClientFloodRecord(flood_record: unknown): flood_record is ClientFloodRecord {
+  if (typeof flood_record !== 'object' || flood_record === null) {
+    console.log("Invalid flood record: not an object or null");
+    return false;
+  }
+
+  const potential = flood_record as Record<string, unknown>;
+  let geom;
+
+  if (typeof potential.geometry === "string") {
+    try {
+     geom = JSON.parse(potential.geometry)
+    } catch {
+      return false;
+    }
+
+    return geom.coordinates.every((ring: any) => 
+      ring.every((val: number[]) => val.every((coord: number) => Number.isFinite(coord)))
+    );
+  }
+  return false
+}
 
 
 const layer = dataset.layers.get(0);
@@ -29,9 +52,11 @@ let record_index = 0;
       const id = String(feature.fid);
       const geom = feature.getGeometry();
       //console.log(geom)
-      clientData[id] = {
-        geometry: JSON.stringify(geom?.toObject()), 
-  };
+      if (isClientFloodRecord(geom?.toObject())) {
+        clientData[id] = {
+          geometry: JSON.stringify(geom?.toObject()), 
+        };
+      }
 
   record_index +=1
 }
