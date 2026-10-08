@@ -4,7 +4,7 @@
   "scripts": {
     "dev": "concurrently -n firebase,mobile -c blue,green \"npm:dev:firebase\" \"npm:dev:mobile\"",
     "dev:firebase": "npm --prefix firebase/functions run build && cd firebase && firebase emulators:start",
-    "dev:mobile": "cd mobile && npx expo start --dev-client --ios"
+    "dev:mobile": "cd mobile && npx expo run:ios"
   },
   "devDependencies": {
     "concurrently": "^9.0.0"
