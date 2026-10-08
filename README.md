@@ -37,3 +37,28 @@ npm run dev
 Starts the Firebase emulator (local, isolated Firestore/Auth/Storage/Functions) and the Expo dev server together, and builds, installs and launches the app on the iOS simulator — no manual step needed. The first run compiles the native app and takes several minutes; later runs are much faster. It connects to the local emulator, not the real hosted project. `Ctrl+C` stops both.
 
 Emulator UI (data + logs) while running: `http://127.0.0.1:4000`.
+
+## Implementing Figma designs (optional, Claude Code only)
+
+Reference: https://developers.figma.com/docs/figma-mcp-server/remote-server-installation/#claude-code
+
+If you're using Claude Code to implement a screen from Figma, connect it to your Figma account once so it can pull exact dimensions/colors/spacing instead of guessing from screenshots.
+
+### One-time setup
+
+1. Install the plugin: `claude plugin install figma@claude-plugins-official`
+2. Restart Claude Code
+3. Run `/mcp`, select `figma`, click **Authenticate** — a browser window opens for Figma login, click **Allow Access** there
+4. Confirm it says "Connected to figma"
+
+The browser is only used for that one-time login. After this, you're done setting up — no need to repeat it for future screens.
+
+### Using it (every time you implement a screen)
+
+This part does **not** happen in the browser — it happens entirely in your Claude Code chat:
+
+1. In Figma (browser or desktop app), click the specific frame you want implemented to select it
+2. Right-click → **Copy link to selection**
+3. Switch back to **Claude Code** and paste that link into the chat, e.g. "implement this screen: `<link>`"
+
+Claude reads the exact design data from that link (dimensions, colors, spacing, layer structure) rather than guessing from a screenshot.
