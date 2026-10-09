@@ -11,9 +11,12 @@ import { Spacing } from '@/constants/theme';
 import { auth, firestore } from '@/lib/firebase';
 
 // Placeholder UI — real design pending Figma. Logic (Firebase Auth sign-up +
-// Firestore profile creation) is functional.
+// Firestore profile creation) is functional. "Signup with Google" is UI-only (separate ticket).
 export default function SignUpScreen() {
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -23,6 +26,9 @@ export default function SignUpScreen() {
       const credential = await createUserWithEmailAndPassword(auth, email, password);
       await setDoc(doc(firestore, 'users', credential.user.uid), {
         email: credential.user.email,
+        firstName,
+        ...(lastName !== '' && { lastName }),
+        username,
         createdAt: serverTimestamp(),
       });
     } catch (err) {
@@ -39,11 +45,30 @@ export default function SignUpScreen() {
 
         <TextInput
           style={styles.input}
+          placeholder="First name"
+          value={firstName}
+          onChangeText={setFirstName}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Last name (optional)"
+          value={lastName}
+          onChangeText={setLastName}
+        />
+        <TextInput
+          style={styles.input}
           placeholder="Email"
           autoCapitalize="none"
           keyboardType="email-address"
           value={email}
           onChangeText={setEmail}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Username"
+          autoCapitalize="none"
+          value={username}
+          onChangeText={setUsername}
         />
         <TextInput
           style={styles.input}
@@ -65,9 +90,23 @@ export default function SignUpScreen() {
           </ThemedView>
         </Pressable>
 
+        <ThemedView style={styles.dividerRow}>
+          <ThemedView type="backgroundElement" style={styles.dividerLine} />
+          <ThemedText type="small" themeColor="textSecondary">
+            or
+          </ThemedText>
+          <ThemedView type="backgroundElement" style={styles.dividerLine} />
+        </ThemedView>
+
+        <Pressable disabled>
+          <ThemedView type="backgroundElement" style={styles.button}>
+            <ThemedText type="link">Signup with Google</ThemedText>
+          </ThemedView>
+        </Pressable>
+
         <Link href="/(auth)/sign-in" asChild>
           <Pressable>
-            <ThemedText type="linkPrimary">Already have an account? Sign in</ThemedText>
+            <ThemedText type="linkPrimary">Already have an account? Login</ThemedText>
           </Pressable>
         </Link>
       </SafeAreaView>
@@ -95,6 +134,15 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.two,
     borderRadius: Spacing.two,
     alignItems: 'center',
+  },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
   },
   error: { color: '#d33' },
 });

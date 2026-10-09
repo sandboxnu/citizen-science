@@ -1,5 +1,7 @@
 {
   "projects": {
-    "default": "citizen-science-platform"
+    "default": "citizen-science-platform-dev",
+    "prod": "citizen-science-platform",
+    "dev": "citizen-science-platform-dev"
   }
 }

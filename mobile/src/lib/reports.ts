@@ -14,6 +14,36 @@ export type SubmitDuringDisasterReportInput = {
 };
 
 
+export type ConcernType =
+  | "water_damage"
+  | "air_quality"
+  | "structural_damage"
+  | "road_damage"
+  | "power_outage"
+  | "other";
+
+export type Concern = {
+  type: ConcernType;
+  otherDescription?: string; // required if type === "other"
+  damageRating: number; // required, 1-5
+  description?: string; // optional
+  photoUrls: { url: string; latitude: number; longitude: number }[]; // already-uploaded Storage URLs and locations, multiple per concern
+};
+
+export type SubmitPostDisasterReportInput = {
+  userId: string;
+  disasterType: DisasterType;
+  latitude: number;
+  longitude: number;
+  observedAt: string; // auto-captured, user-editable in the UI
+  concerns: Concern[];
+};
+
+// TODO: implement
+export async function submitPostDisasterReport(
+  input: SubmitPostDisasterReportInput
+): Promise<void> {}
+
 export async function submitDuringDisasterReport(
   input: SubmitDuringDisasterReportInput
 ): Promise<void> {

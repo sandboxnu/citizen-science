@@ -21,6 +21,7 @@ module.exports = {
     "/lib/**/*", // Ignore built files.
     "/generated/**/*", // Ignore generated files.
     "/scripts/**/*", // Local dev scripts, not deployed.
+    "jest.config.js", // Not part of the TS project; test config only.
   ],
   plugins: [
     "@typescript-eslint",

@@ -1,5 +1,5 @@
 import { Redirect } from 'expo-router';
-import { NativeTabs } from 'expo-router/unstable-native-tabs';
+import { NativeTabs } from 'expo-router/native-tabs';
 import { useColorScheme } from 'react-native';
 
 import { Colors } from '@/constants/theme';
@@ -8,7 +8,7 @@ import { useAuth } from '@/lib/auth-context';
 export default function TabsLayout() {
   const { user, initializing } = useAuth();
   const scheme = useColorScheme();
-  const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
+  const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
 
   if (initializing) {
     return null;
@@ -31,12 +31,24 @@ export default function TabsLayout() {
         />
       </NativeTabs.Trigger>
 
+      <NativeTabs.Trigger name="feed">
+        <NativeTabs.Trigger.Label>Feed</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="doc.text" />
+      </NativeTabs.Trigger>
+
       <NativeTabs.Trigger name="report">
         <NativeTabs.Trigger.Label>Report</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon
-          src={require('@/assets/images/tabIcons/explore.png')}
-          renderingMode="template"
-        />
+        <NativeTabs.Trigger.Icon sf="plus.circle" />
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="alerts">
+        <NativeTabs.Trigger.Label>Alerts</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="bell" />
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="profile">
+        <NativeTabs.Trigger.Label>Profile</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="person.crop.circle" />
       </NativeTabs.Trigger>
     </NativeTabs>
   );
