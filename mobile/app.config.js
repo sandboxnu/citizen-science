@@ -52,6 +52,7 @@ export default {
       ],
       '@react-native-firebase/app',
       '@react-native-firebase/auth',
+      './plugins/withFirebaseAppDelegateFix',
       [
         'expo-build-properties',
         {
