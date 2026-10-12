@@ -61,90 +61,16 @@ const NEW_HANOVER_COUNTY: Ring = [
 
 const polygon = (ring: Ring) => JSON.stringify({ type: "Polygon", coordinates: [ring] });
 
-// Times are relative to now so seeded alerts are always active.
-const hoursFromNow = (hours: number) =>
-  admin.firestore.Timestamp.fromMillis(Date.now() + hours * 60 * 60 * 1000);
-
-// Field names and values follow the NWS alert properties from
-// https://api.weather.gov/alerts/active. Dates are Timestamps, and geometry is
-// a JSON string because Firestore does not support nested arrays — clients
-// should JSON.parse(doc.geometry) before rendering.
-const hazardZones = {
-  "seed-wake-flood-warning": {
-    event: "Flood Warning",
-    severity: "Moderate",
-    certainty: "Likely",
-    urgency: "Expected",
-    headline: "Flood Warning issued for Wake County by NWS Raleigh NC",
-    description: "Flooding caused by excessive rainfall is expected along the Neuse River and Crabtree Creek.",
-    instruction: "Turn around, don't drown when encountering flooded roads.",
-    areaDesc: "Wake, NC",
-    senderName: "NWS Raleigh NC",
-    zoneIds: ["NCC183"],
-    onset: hoursFromNow(-1),
-    expires: hoursFromNow(12),
-    geometry: polygon(WAKE_COUNTY),
-  },
-  "seed-ne-nc-flash-flood-warning": {
-    event: "Flash Flood Warning",
-    severity: "Severe",
-    certainty: "Observed",
-    urgency: "Immediate",
-    headline: "Flash Flood Warning issued for northeastern NC by NWS Wakefield VA",
-    description: "Doppler radar indicated thunderstorms producing heavy rain. Between 2 and 4 inches of rain have fallen.",
-    instruction: "Move to higher ground now. Act quickly to protect your life.",
-    areaDesc: "Bertie, NC; Chowan, NC; Gates, NC; Hertford, NC; Perquimans, NC",
-    senderName: "NWS Wakefield VA",
-    zoneIds: ["NCC015", "NCC041", "NCC073", "NCC091", "NCC143"],
-    onset: hoursFromNow(0),
-    expires: hoursFromNow(3),
-    geometry: polygon(NE_NC_FLASH_FLOOD),
-  },
-  "seed-outer-banks-coastal-flood-warning": {
-    event: "Coastal Flood Warning",
-    severity: "Severe",
-    certainty: "Likely",
-    urgency: "Expected",
-    headline: "Coastal Flood Warning issued for the Northern Outer Banks",
-    description: "Inundation of 2 to 3 feet above ground level in low-lying areas near the shoreline.",
-    instruction: "Take the necessary actions to protect flood-prone property.",
-    areaDesc: "Northern Outer Banks",
-    senderName: "NWS Newport/Morehead City NC",
-    zoneIds: ["NCZ203"],
-    onset: hoursFromNow(2),
-    expires: hoursFromNow(36),
-    geometry: polygon(NORTHERN_OUTER_BANKS),
-  },
-  "seed-mecklenburg-flood-watch": {
-    event: "Flood Watch",
-    severity: "Moderate",
-    certainty: "Possible",
-    urgency: "Future",
-    headline: "Flood Watch issued for Mecklenburg County",
-    description: "Excessive rainfall may cause flooding of creeks, streams, and urban areas.",
-    instruction: "Monitor later forecasts and be prepared to take action.",
-    areaDesc: "Mecklenburg, NC",
-    senderName: "NWS Greenville-Spartanburg SC",
-    zoneIds: ["NCC119"],
-    onset: hoursFromNow(6),
-    expires: hoursFromNow(24),
-    geometry: polygon(MECKLENBURG_COUNTY),
-  },
-  "seed-new-hanover-flood-advisory": {
-    event: "Flood Advisory",
-    severity: "Minor",
-    certainty: "Likely",
-    urgency: "Expected",
-    headline: "Flood Advisory issued for New Hanover County",
-    description: "Minor flooding in low-lying and poor drainage areas of Wilmington.",
-    instruction: null,
-    areaDesc: "New Hanover, NC",
-    senderName: "NWS Wilmington NC",
-    zoneIds: ["NCC129"],
-    onset: hoursFromNow(0),
-    expires: hoursFromNow(4),
-    geometry: polygon(NEW_HANOVER_COUNTY),
-  },
+// Matches the minimal shape scripts/seed-client.ts writes to `clientData`
+// ({ geometry, active, ingestedAt }) — geometry is a JSON string because
+// Firestore does not support nested arrays; clients should
+// JSON.parse(doc.geometry) before rendering.
+const hazardZones: Record<string, { geometry: string }> = {
+  "seed-wake-flood-warning": { geometry: polygon(WAKE_COUNTY) },
+  "seed-ne-nc-flash-flood-warning": { geometry: polygon(NE_NC_FLASH_FLOOD) },
+  "seed-outer-banks-coastal-flood-warning": { geometry: polygon(NORTHERN_OUTER_BANKS) },
+  "seed-mecklenburg-flood-watch": { geometry: polygon(MECKLENBURG_COUNTY) },
+  "seed-new-hanover-flood-advisory": { geometry: polygon(NEW_HANOVER_COUNTY) },
 };
 
 async function seed() {

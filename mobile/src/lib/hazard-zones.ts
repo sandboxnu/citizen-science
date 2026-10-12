@@ -5,18 +5,13 @@ export type LatLng = { latitude: number; longitude: number };
 
 export type HazardZone = {
   id: string;
-  event: string;
-  severity: string;
   coordinates: LatLng[];
 };
 
-// Minimal shape of the raw Firestore doc we actually read. The seed script
-// (firebase/functions/scripts/seed.ts) writes many more NWS-alert-shaped
-// fields (certainty, urgency, headline, ...) — not modeled here since
-// nothing renders them yet.
+// Minimal shape of the raw Firestore doc we actually read — matches what
+// both firebase/functions/scripts/seed.ts (hazard_zones) and
+// scripts/seed-client.ts (clientData) write: { geometry, active, ingestedAt }.
 type HazardZoneDoc = {
-  event?: string;
-  severity?: string;
   geometry?: string;
 };
 
@@ -40,12 +35,7 @@ export async function fetchHazardZones(): Promise<HazardZone[]> {
     try {
       const coordinates = parseHazardZoneGeometry(data.geometry);
       if (coordinates.length === 0) continue;
-      zones.push({
-        id: doc.id,
-        event: data.event ?? 'Unknown event',
-        severity: data.severity ?? 'Unknown',
-        coordinates,
-      });
+      zones.push({ id: doc.id, coordinates });
     } catch {
       // Skip zones with malformed geometry rather than crashing the map.
       continue;
