@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "dev": "concurrently -n firebase,mobile -c blue,green \"npm:dev:firebase\" \"npm:dev:mobile\"",
-    "dev:firebase": "npm --prefix firebase/functions run build && cd firebase && firebase emulators:start",
+    "dev:firebase": "npm --prefix firebase/functions run build && npm --prefix firebase/functions run dev",
     "dev:mobile": "cd mobile && npx expo start --dev-client --ios"
   },
   "devDependencies": {
