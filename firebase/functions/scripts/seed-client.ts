@@ -68,7 +68,7 @@ async function seed() {
   const batch = db.batch();
 
   Object.entries(clientData).forEach(([id, zone]) => {
-    const ref = db.collection("clientData").doc(id);
+    const ref = db.collection("hazard_zones").doc(id);
     batch.set(ref, {
       ...zone,
       active: true,
