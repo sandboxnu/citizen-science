@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { signOut } from '@react-native-firebase/auth';
 import { Pressable, StyleSheet } from 'react-native';
-import MapView, { Polygon } from 'react-native-maps';
+import MapView, { Circle, Polygon, type LatLng, type UserLocationChangeEvent } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
@@ -11,18 +11,27 @@ import { useAuth } from '@/lib/auth-context';
 import { auth } from '@/lib/firebase';
 import { fetchHazardZones, type HazardZone } from '@/lib/hazard-zones';
 
-// Centered roughly on NC (covers the state from the mountains to the coast).
-const NC_REGION = {
-  latitude: 35.5,
-  longitude: -79.0,
-  latitudeDelta: 4.5,
-  longitudeDelta: 4.5,
+const DEFAULT_REGION = {
+  latitude: 36.5613,
+  longitude: -80.7893,
+  latitudeDelta: 0.05,
+  longitudeDelta: 0.05,
 };
 
 export default function MapScreen() {
   const { user } = useAuth();
   const [hazardZones, setHazardZones] = useState<HazardZone[]>([]);
   const [error, setError] = useState(false);
+  const [userLocation, setUserLocation] = useState<{ coordinate: LatLng; accuracy: number } | null>(null);
+
+  const handleUserLocationChange = useCallback((event: UserLocationChangeEvent) => {
+    const coordinate = event.nativeEvent.coordinate;
+    if (!coordinate) return;
+    setUserLocation({
+      coordinate: { latitude: coordinate.latitude, longitude: coordinate.longitude },
+      accuracy: coordinate.accuracy,
+    });
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -40,15 +49,32 @@ export default function MapScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <MapView style={styles.map} initialRegion={NC_REGION}>
-        {hazardZones.map((zone) => (
-          <Polygon
-            key={zone.id}
-            coordinates={zone.coordinates}
-            fillColor="rgba(255,0,0,0.2)"
-            strokeColor="rgba(255,0,0,0.8)"
+      <MapView
+        style={styles.map}
+        initialRegion={DEFAULT_REGION}
+        showsUserLocation
+        onUserLocationChange={handleUserLocationChange}
+      >
+        {hazardZones.flatMap((zone) =>
+          zone.rings.map((ring, i) => (
+            <Polygon
+              key={`${zone.id}-${i}`}
+              coordinates={ring}
+              fillColor="rgba(33,150,243,0.5)"
+              strokeColor="rgba(13,71,161,0.9)"
+              strokeWidth={2}
+            />
+          ))
+        )}
+        {userLocation && (
+          <Circle
+            center={userLocation.coordinate}
+            radius={userLocation.accuracy}
+            fillColor="rgba(0,122,255,0.15)"
+            strokeColor="rgba(0,122,255,0.3)"
+            strokeWidth={1}
           />
-        ))}
+        )}
       </MapView>
 
       <SafeAreaView style={styles.overlay} edges={['top']}>

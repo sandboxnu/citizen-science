@@ -10,7 +10,7 @@ export interface ClientFloodRecord {
 // Points to local emulator — do not change
 process.env.FIRESTORE_EMULATOR_HOST = "127.0.0.1:8080";
 
-admin.initializeApp({ projectId: "citizen-science-platform" });
+admin.initializeApp({ projectId: "citizen-science-platform-dev" });
 
 const db = admin.firestore();
 
@@ -47,21 +47,16 @@ export function isClientFloodRecord(flood_record: unknown): flood_record is Clie
 const layer = dataset.layers.get(0);
 
 let record_index = 0;
-    layer.features.forEach((feature) => {
-      if (record_index >= MAX_RECORDS) { return}
-      const id = String(feature.fid);
-      const geom = feature.getGeometry();
-      //console.log(geom)
-      if (isClientFloodRecord(geom?.toObject())) {
-        clientData[id] = {
-          geometry: JSON.stringify(geom?.toObject()), 
-        };
-      }
-
-  record_index +=1
-}
-
-    )
+layer.features.forEach((feature) => {
+  if (record_index >= MAX_RECORDS) { return; }
+  const id = String(feature.fid);
+  const geom = feature.getGeometry();
+  const candidate: unknown = { geometry: JSON.stringify(geom?.toObject()) };
+  if (isClientFloodRecord(candidate)) {
+    clientData[id] = candidate;
+  }
+  record_index += 1;
+});
 
 
 async function seed() {

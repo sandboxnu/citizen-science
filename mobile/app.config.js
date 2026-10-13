@@ -21,6 +21,7 @@ export default {
         NSAppTransportSecurity: {
           NSAllowsLocalNetworking: true,
         },
+        NSLocationWhenInUseUsageDescription: 'Allow Sightline to show your location on the map.',
       },
     },
     android: {
