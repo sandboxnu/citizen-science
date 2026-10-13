@@ -61,7 +61,8 @@ export const Spacing = {
   six: 64,
   seven: 12,
   eight: 80,
-  nine: 45
+  nine: 45,
+  ten: 10
 } as const;
 
 export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;

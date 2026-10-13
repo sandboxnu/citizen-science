@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
   },
   buttons: { gap: Spacing.seven },
   button: {
-    paddingVertical: Spacing.three,
+    paddingVertical: Spacing.ten,
     borderRadius: Spacing.two,
     alignItems: 'center',
   },

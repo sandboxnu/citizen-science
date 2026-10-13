@@ -1,18 +1,26 @@
 import type { ReactNode } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native';
 
 import { Spacing } from '@/constants/theme';
 
-export const AUTH_PRIMARY = '#1F4A8C';
+export const AUTH_PRIMARY = '#054A91';
 
 type AuthSheetProps = {
   heading: string;
+  headingSize?: number;
+  // Minimum fraction of the screen height the white sheet takes up; it grows to fit its content.
+  sheetRatio?: number;
   children: ReactNode;
 };
 
 // Blue hero with the wordmark and a white rounded sheet holding the form.
-export function AuthSheet({ heading, children }: AuthSheetProps) {
+export function AuthSheet({
+  heading,
+  headingSize = 20,
+  sheetRatio = 0.67,
+  children,
+}: AuthSheetProps) {
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -23,14 +31,11 @@ export function AuthSheet({ heading, children }: AuthSheetProps) {
         <Text style={styles.wordmark}>sightline</Text>
       </View>
 
-      <View style={styles.sheet}>
-        <ScrollView
-          contentContainerStyle={styles.form}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}>
-          <Text style={styles.heading}>{heading}</Text>
+      <View style={[styles.sheet, { minHeight: `${sheetRatio * 100}%` }]}>
+        <View style={styles.form}>
+          <Text style={[styles.heading, { fontSize: headingSize }]}>{heading}</Text>
           {children}
-        </ScrollView>
+        </View>
       </View>
     </KeyboardAvoidingView>
   );
@@ -39,10 +44,10 @@ export function AuthSheet({ heading, children }: AuthSheetProps) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: AUTH_PRIMARY },
   hero: {
-    flex: 0.33,
-    justifyContent: 'center',
+    flex: 1,
+    justifyContent: 'flex-end',
     alignItems: 'center',
-    paddingTop: Spacing.six,
+    paddingBottom: Spacing.eight,
   },
   wordmark: {
     color: '#ffffff',
@@ -51,22 +56,20 @@ const styles = StyleSheet.create({
     letterSpacing: -1,
   },
   sheet: {
-    flex: 0.67,
     backgroundColor: '#ffffff',
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
     overflow: 'hidden',
   },
   form: {
-    paddingTop: Spacing.five,
+    paddingTop: Spacing.nine,
     paddingBottom: 36,
     paddingHorizontal: Spacing.four,
     gap: Spacing.three,
   },
   heading: {
     color: AUTH_PRIMARY,
-    fontSize: 20,
     fontWeight: '600',
-    marginBottom: Spacing.one,
+    marginBottom: Spacing.two,
   },
 });

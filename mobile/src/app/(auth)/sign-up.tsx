@@ -9,6 +9,8 @@ import { FormField, PasswordField, UsernameField } from '@/components/auth/form-
 import { Spacing } from '@/constants/theme';
 import { auth, firestore } from '@/lib/firebase';
 
+type FieldErrors = Partial<Record<'firstName' | 'email' | 'username' | 'password', string>>;
+
 export default function SignUpScreen() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -16,9 +18,25 @@ export default function SignUpScreen() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+
+  function clearFieldError(field: keyof FieldErrors) {
+    setFieldErrors((prev) => ({ ...prev, [field]: undefined }));
+  }
 
   async function handleSignUp() {
     setError(null);
+    const nextErrors: FieldErrors = {
+      firstName: firstName.trim() === '' ? 'Name is required.' : undefined,
+      email: email.trim() === '' ? 'Email is required.' : undefined,
+      username: username.trim() === '' ? 'Username is required.' : undefined,
+      password: password === '' ? 'Password is required.' : undefined,
+    };
+    setFieldErrors(nextErrors);
+    if (Object.values(nextErrors).some(Boolean)) {
+      return;
+    }
+
     try {
       const credential = await createUserWithEmailAndPassword(auth, email, password);
       await setDoc(doc(firestore, 'users', credential.user.uid), {
@@ -42,7 +60,11 @@ export default function SignUpScreen() {
           required
           placeholder="Enter first name"
           value={firstName}
-          onChangeText={setFirstName}
+          error={fieldErrors.firstName}
+          onChangeText={(text) => {
+            setFirstName(text);
+            clearFieldError('firstName');
+          }}
         />
         <FormField
           style={styles.rowItem}
@@ -59,13 +81,21 @@ export default function SignUpScreen() {
         autoCapitalize="none"
         keyboardType="email-address"
         value={email}
-        onChangeText={setEmail}
+        error={fieldErrors.email}
+        onChangeText={(text) => {
+          setEmail(text);
+          clearFieldError('email');
+        }}
       />
       <UsernameField
         required
         placeholder="Enter a username"
         value={username}
-        onChangeText={setUsername}
+        error={fieldErrors.username}
+        onChangeText={(text) => {
+          setUsername(text);
+          clearFieldError('username');
+        }}
       />
       <PasswordField
         required
@@ -73,7 +103,11 @@ export default function SignUpScreen() {
         autoComplete="new-password"
         textContentType="newPassword"
         value={password}
-        onChangeText={setPassword}
+        error={fieldErrors.password}
+        onChangeText={(text) => {
+          setPassword(text);
+          clearFieldError('password');
+        }}
       />
 
       {error && <Text style={styles.error}>{error}</Text>}
@@ -97,11 +131,11 @@ const styles = StyleSheet.create({
   error: { color: '#d33', fontSize: 14 },
   button: {
     backgroundColor: AUTH_PRIMARY,
-    paddingVertical: Spacing.three,
+    paddingVertical: Spacing.ten,
     borderRadius: Spacing.two,
     alignItems: 'center',
-    marginTop: Spacing.three,
+    marginTop: Spacing.four,
   },
-  buttonText: { color: '#ffffff', fontSize: 16 },
-  link: { color: AUTH_PRIMARY, fontSize: 16, textAlign: 'center' },
+  buttonText: { color: '#ffffff', fontSize: 14 },
+  link: { color: AUTH_PRIMARY, fontSize: 14, textAlign: 'center' },
 });

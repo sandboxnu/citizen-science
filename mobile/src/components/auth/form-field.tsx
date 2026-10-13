@@ -3,24 +3,30 @@ import { StyleSheet, Text, TextInput, View, type TextInputProps, type ViewStyle 
 import { Spacing } from '@/constants/theme';
 
 const PRIMARY = '#1F4A8C';
-const REQUIRED = '#D9622B';
+const REQUIRED = '#E75A0E';
 const BORDER = '#BDBDBD';
 const PLACEHOLDER = '#B3B3B3';
 
 export type FormFieldProps = Omit<TextInputProps, 'style'> & {
   label: string;
   required?: boolean;
+  error?: string;
   style?: ViewStyle;
 };
 
-export function FormField({ label, required, style, ...inputProps }: FormFieldProps) {
+export function FormField({ label, required, error, style, ...inputProps }: FormFieldProps) {
   return (
     <View style={style}>
       <Text style={styles.label}>
         {label}
         {required && <Text style={styles.required}>*</Text>}
       </Text>
-      <TextInput style={styles.input} placeholderTextColor={PLACEHOLDER} {...inputProps} />
+      <TextInput
+        style={[styles.input, error && styles.inputError]}
+        placeholderTextColor={PLACEHOLDER}
+        {...inputProps}
+      />
+      {error && <Text style={styles.error}>{error}</Text>}
     </View>
   );
 }
@@ -55,15 +61,17 @@ export function PasswordField({ label = 'Password', ...props }: PresetFieldProps
 }
 
 const styles = StyleSheet.create({
-  label: { color: PRIMARY, fontSize: 16, marginBottom: Spacing.two },
+  label: { color: PRIMARY, fontSize: 14, marginBottom: Spacing.two },
   required: { color: REQUIRED },
   input: {
     borderWidth: 1,
     borderColor: BORDER,
     borderRadius: Spacing.one,
     paddingHorizontal: Spacing.three,
-    paddingVertical: 14,
-    fontSize: 16,
+    paddingVertical: Spacing.ten,
+    fontSize: 14,
     color: '#111111',
   },
+  inputError: { borderColor: REQUIRED },
+  error: { color: REQUIRED, fontSize: 12, marginTop: Spacing.one },
 });
