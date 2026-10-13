@@ -14,6 +14,7 @@
     "seed": "tsx scripts/seed.ts",
     "seed:client": "tsx scripts/seed-client.ts",
     "seed:users": "tsx scripts/seed-users.ts",
+    "seed:export-client-mock": "tsx scripts/export-client-mock.ts",
     "dev": "concurrently --names emulators,seed --prefix-colors blue,green \"npm run emulators\" \"wait-on --timeout 120000 http-get://127.0.0.1:8080 && npm run seed\""
   },
   "engines": {
