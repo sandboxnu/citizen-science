@@ -1,16 +1,15 @@
 import { signInWithEmailAndPassword } from '@react-native-firebase/auth';
 import { Link } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, TextInput } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Pressable, StyleSheet, Text } from 'react-native';
 
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
+import { AUTH_PRIMARY, AuthSheet } from '@/components/auth/auth-sheet';
+import { PasswordField, UsernameField } from '@/components/auth/form-field';
 import { Spacing } from '@/constants/theme';
 import { auth } from '@/lib/firebase';
 
-// Placeholder UI — real design pending Figma. Logic (Firebase Auth sign-in) is functional.
 export default function SignInScreen() {
+  // TODO: support signing in by username (look up the user's email first).
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -25,70 +24,46 @@ export default function SignInScreen() {
   }
 
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedText type="title" style={styles.title}>
-          Sign In
-        </ThemedText>
+    <AuthSheet heading="Welcome back">
+      <UsernameField
+        placeholder="Enter your username or email"
+        keyboardType="email-address"
+        value={email}
+        onChangeText={setEmail}
+      />
+      <PasswordField placeholder="Enter your password" value={password} onChangeText={setPassword} />
 
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          autoCapitalize="none"
-          keyboardType="email-address"
-          value={email}
-          onChangeText={setEmail}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
+      {/* TODO: wire up password reset */}
+      <Pressable style={styles.forgot}>
+        <Text style={styles.link}>Forgot password?</Text>
+      </Pressable>
 
-        {error && (
-          <ThemedText type="small" style={styles.error}>
-            {error}
-          </ThemedText>
-        )}
+      {error && <Text style={styles.error}>{error}</Text>}
 
-        <Pressable onPress={handleSignIn}>
-          <ThemedView type="backgroundElement" style={styles.button}>
-            <ThemedText type="link">Sign In</ThemedText>
-          </ThemedView>
+      <Pressable style={styles.button} onPress={handleSignIn}>
+        <Text style={styles.buttonText}>Login</Text>
+      </Pressable>
+
+      <Link href="/(auth)/sign-up" asChild>
+        <Pressable>
+          <Text style={[styles.link, styles.centered]}>Don&apos;t have an account? Sign up</Text>
         </Pressable>
-
-        <Link href="/(auth)/sign-up" asChild>
-          <Pressable>
-            <ThemedText type="linkPrimary">Don&apos;t have an account? Sign up</ThemedText>
-          </Pressable>
-        </Link>
-      </SafeAreaView>
-    </ThemedView>
+      </Link>
+    </AuthSheet>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  safeArea: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.three,
-  },
-  title: { textAlign: 'center' },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: Spacing.two,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
-  },
+  forgot: { alignSelf: 'flex-end' },
+  error: { color: '#d33', fontSize: 14 },
   button: {
-    paddingVertical: Spacing.two,
+    backgroundColor: AUTH_PRIMARY,
+    paddingVertical: Spacing.three,
     borderRadius: Spacing.two,
     alignItems: 'center',
+    marginTop: Spacing.five,
   },
-  error: { color: '#d33' },
+  buttonText: { color: '#ffffff', fontSize: 16 },
+  link: { color: AUTH_PRIMARY, fontSize: 16 },
+  centered: { textAlign: 'center' },
 });
