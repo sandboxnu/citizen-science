@@ -31,6 +31,7 @@
    ```bash
    cd mobile && eas build:run --platform ios
    ```
+   **Also redo this whenever a native dependency is added** (e.g. `react-native-maps`) — your installed dev client won't include it, and screens using it will crash. Someone first publishes a new build with `eas build --profile development --platform ios`, then everyone re-runs the command above to install it.
 
 ### 2. Run it
 
