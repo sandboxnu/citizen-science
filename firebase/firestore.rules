@@ -12,17 +12,54 @@ service cloud.firestore {
 
     // User profiles are created by each user for themselves on sign-up.
     // Users can only read, create, and update their own profile.
+    // Field set is locked with hasOnly() so a client can't write an
+    // arbitrary field (e.g. a future `role`/`isAdmin`) onto their own doc.
     match /users/{userId} {
-      allow read, create, update: if request.auth != null
+      allow read: if request.auth != null
         && request.auth.uid == userId;
+
+      allow create: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.data.keys().hasOnly(['firstName', 'lastName', 'username', 'email', 'createdAt'])
+        && request.resource.data.keys().hasAll(['firstName', 'username', 'email', 'createdAt'])
+        && request.resource.data.firstName is string
+        && request.resource.data.firstName.size() > 0 && request.resource.data.firstName.size() <= 100
+        && (!('lastName' in request.resource.data)
+            || (request.resource.data.lastName is string && request.resource.data.lastName.size() <= 100))
+        && request.resource.data.username is string
+        && request.resource.data.username.size() > 0 && request.resource.data.username.size() <= 50
+        && request.resource.data.email is string && request.resource.data.email.size() <= 320
+        && request.resource.data.createdAt is timestamp;
+
+      allow update: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.data.keys().hasOnly(['firstName', 'lastName', 'username', 'email', 'createdAt'])
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.firstName is string
+        && request.resource.data.firstName.size() > 0 && request.resource.data.firstName.size() <= 100
+        && (!('lastName' in request.resource.data)
+            || (request.resource.data.lastName is string && request.resource.data.lastName.size() <= 100))
+        && request.resource.data.username is string
+        && request.resource.data.username.size() > 0 && request.resource.data.username.size() <= 50
+        && request.resource.data.email is string && request.resource.data.email.size() <= 320;
+
       allow delete: if false;
     }
 
-    // Reports are created by authenticated users.
-    // Users can only read and create their own reports.
+    // Reports are created by authenticated users for themselves and are
+    // immutable afterward. Field set + types are validated to match
+    // mobile/src/lib/reports.ts's submitDuringDisasterReport() payload.
     match /reports/{reportId} {
       allow create: if request.auth != null
-        && request.resource.data.userId == request.auth.uid;
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.keys().hasOnly(['userId', 'disasterType', 'location', 'observedAt', 'photos', 'description'])
+        && request.resource.data.keys().hasAll(['userId', 'disasterType', 'location', 'observedAt', 'photos'])
+        && request.resource.data.disasterType in ['flooding', 'earthquake', 'forest_fire']
+        && request.resource.data.location is latlng
+        && request.resource.data.observedAt is timestamp
+        && request.resource.data.photos is list && request.resource.data.photos.size() <= 20
+        && (!('description' in request.resource.data)
+            || (request.resource.data.description is string && request.resource.data.description.size() <= 2000));
       allow read: if request.auth != null
         && resource.data.userId == request.auth.uid;
       allow update, delete: if false;

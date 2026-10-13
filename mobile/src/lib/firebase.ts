@@ -6,6 +6,7 @@ import { getAuth, connectAuthEmulator } from "@react-native-firebase/auth";
 import {
   getFirestore,
   connectFirestoreEmulator,
+  clearPersistence,
 } from "@react-native-firebase/firestore";
 import {
   getStorage,
@@ -17,16 +18,12 @@ const auth = getAuth(app);
 const firestore = getFirestore(app);
 const storage = getStorage(app);
 
-// Physical devices can't reach "localhost" (that's the phone itself), so we
-// resolve the dev machine's LAN IP from the same host Metro is already using.
-// The iOS simulator shares the Mac's network directly; the Android emulator
-// maps the host machine to a fixed alias instead of a real IP.
-function getEmulatorHost(): string {
+export function getEmulatorHost(): string {
   if (Device.isDevice) {
     const lanHost = Constants.expoConfig?.hostUri?.split(":")[0];
-    return lanHost ?? "localhost";
+    return lanHost ?? "127.0.0.1";
   }
-  return Platform.OS === "android" ? "10.0.2.2" : "localhost";
+  return Platform.OS === "android" ? "10.0.2.2" : "127.0.0.1";
 }
 
 if (__DEV__) {
@@ -34,6 +31,7 @@ if (__DEV__) {
   connectAuthEmulator(auth, `http://${host}:9099`);
   connectFirestoreEmulator(firestore, host, 8080);
   connectStorageEmulator(storage, host, 9199);
+  clearPersistence(firestore).catch(() => {});
 }
 
 export { app, auth, firestore, storage };
