@@ -9,21 +9,15 @@ admin.initializeApp({ projectId: "citizen-science-platform-dev" });
 
 const db = admin.firestore();
 
-type Ring = [number, number][]; // [lng, lat], first point == last point
+type PolygonGeometry = { type: "Polygon"; coordinates: [number, number][][] };
 
-const mockHazardZoneBoundaries: Record<string, Ring> = JSON.parse(
+const mockHazardZones: Record<string, PolygonGeometry> = JSON.parse(
   fs.readFileSync(path.join(__dirname, "data/mock-hazard-zones.json"), "utf-8")
 );
 
-const polygon = (ring: Ring) => JSON.stringify({ type: "Polygon", coordinates: [ring] });
-
-const hazardZones: Record<string, { geometry: string }> = {
-  "seed-wake-flood-warning": { geometry: polygon(mockHazardZoneBoundaries.WAKE_COUNTY) },
-  "seed-ne-nc-flash-flood-warning": { geometry: polygon(mockHazardZoneBoundaries.NE_NC_FLASH_FLOOD) },
-  "seed-outer-banks-coastal-flood-warning": { geometry: polygon(mockHazardZoneBoundaries.NORTHERN_OUTER_BANKS) },
-  "seed-mecklenburg-flood-watch": { geometry: polygon(mockHazardZoneBoundaries.MECKLENBURG_COUNTY) },
-  "seed-new-hanover-flood-advisory": { geometry: polygon(mockHazardZoneBoundaries.NEW_HANOVER_COUNTY) },
-};
+const hazardZones: Record<string, { geometry: string }> = Object.fromEntries(
+  Object.entries(mockHazardZones).map(([id, geometry]) => [id, { geometry: JSON.stringify(geometry) }])
+);
 
 async function seed() {
   const batch = db.batch();

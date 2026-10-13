@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { signOut } from '@react-native-firebase/auth';
-import { Pressable, StyleSheet } from 'react-native';
-import MapView, { Circle, Polygon, type LatLng, type UserLocationChangeEvent } from 'react-native-maps';
+import { Pressable, StyleSheet, View } from 'react-native';
+import MapView, { Circle, Marker, Polygon } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
@@ -11,9 +11,11 @@ import { useAuth } from '@/lib/auth-context';
 import { auth } from '@/lib/firebase';
 import { fetchHazardZones, type HazardZone } from '@/lib/hazard-zones';
 
+const MOCK_USER_LOCATION = { latitude: 36.2, longitude: -81.7 };
+const MOCK_LOCATION_ACCURACY_METERS = 30;
+
 const DEFAULT_REGION = {
-  latitude: 36.5613,
-  longitude: -80.7893,
+  ...MOCK_USER_LOCATION,
   latitudeDelta: 0.05,
   longitudeDelta: 0.05,
 };
@@ -22,16 +24,6 @@ export default function MapScreen() {
   const { user } = useAuth();
   const [hazardZones, setHazardZones] = useState<HazardZone[]>([]);
   const [error, setError] = useState(false);
-  const [userLocation, setUserLocation] = useState<{ coordinate: LatLng; accuracy: number } | null>(null);
-
-  const handleUserLocationChange = useCallback((event: UserLocationChangeEvent) => {
-    const coordinate = event.nativeEvent.coordinate;
-    if (!coordinate) return;
-    setUserLocation({
-      coordinate: { latitude: coordinate.latitude, longitude: coordinate.longitude },
-      accuracy: coordinate.accuracy,
-    });
-  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -52,29 +44,29 @@ export default function MapScreen() {
       <MapView
         style={styles.map}
         initialRegion={DEFAULT_REGION}
-        showsUserLocation
-        onUserLocationChange={handleUserLocationChange}
       >
         {hazardZones.flatMap((zone) =>
-          zone.rings.map((ring, i) => (
+          zone.polygons.map((polygon, i) => (
             <Polygon
               key={`${zone.id}-${i}`}
-              coordinates={ring}
+              coordinates={polygon.outer}
+              holes={polygon.holes}
               fillColor="rgba(33,150,243,0.5)"
               strokeColor="rgba(13,71,161,0.9)"
               strokeWidth={2}
             />
           ))
         )}
-        {userLocation && (
-          <Circle
-            center={userLocation.coordinate}
-            radius={userLocation.accuracy}
-            fillColor="rgba(0,122,255,0.15)"
-            strokeColor="rgba(0,122,255,0.3)"
-            strokeWidth={1}
-          />
-        )}
+        <Circle
+          center={MOCK_USER_LOCATION}
+          radius={MOCK_LOCATION_ACCURACY_METERS}
+          fillColor="rgba(0,122,255,0.15)"
+          strokeColor="rgba(0,122,255,0.3)"
+          strokeWidth={1}
+        />
+        <Marker coordinate={MOCK_USER_LOCATION} anchor={{ x: 0.5, y: 0.5 }} tracksViewChanges={false}>
+          <View style={styles.userDot} />
+        </Marker>
       </MapView>
 
       <SafeAreaView style={styles.overlay} edges={['top']}>
@@ -95,6 +87,14 @@ export default function MapScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   map: { flex: 1 },
+  userDot: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: 'rgb(0,122,255)',
+    borderWidth: 3,
+    borderColor: 'white',
+  },
   overlay: {
     position: 'absolute',
     top: 0,

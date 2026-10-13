@@ -18,11 +18,7 @@ const auth = getAuth(app);
 const firestore = getFirestore(app);
 const storage = getStorage(app);
 
-// Physical devices can't reach "localhost" (that's the phone itself), so we
-// resolve the dev machine's LAN IP from the same host Metro is already using.
-// The iOS simulator shares the Mac's network directly; the Android emulator
-// maps the host machine to a fixed alias instead of a real IP.
-function getEmulatorHost(): string {
+export function getEmulatorHost(): string {
   if (Device.isDevice) {
     const lanHost = Constants.expoConfig?.hostUri?.split(":")[0];
     return lanHost ?? "127.0.0.1";
