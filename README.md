@@ -27,6 +27,13 @@
    sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
    ```
    Open Xcode.app once manually after that (`Cmd+Space` → "Xcode" → enter) — let it install additional components and accept the license. Verify with `xcode-select -p` (should print `/Applications/Xcode.app/Contents/Developer`).
+
+   **Use an iOS 26.1 simulator.** On iOS 26.5+ Firestore silently fails to connect to the local emulator ([firebase-ios-sdk#16406](https://github.com/firebase/firebase-ios-sdk/issues/16406)) — no data loads and no error is shown. Until that's fixed, install the 26.1 runtime (~8 GB) and create a simulator on it:
+   ```bash
+   xcodebuild -downloadPlatform iOS -buildVersion 26.1 -architectureVariant arm64
+   xcrun simctl create "iPhone 17 Pro (iOS 26.1)" "iPhone 17 Pro" com.apple.CoreSimulator.SimRuntime.iOS-26-1
+   ```
+   Boot it (Simulator app → File → Open Simulator) before step 5 and `npm run dev`, so the dev client installs and opens there.
 5. Install the dev-client build on your simulator/device — **required once** before `npm run dev` will have anything to launch (redo this if you ever erase the simulator or set up on a new machine):
    ```bash
    cd mobile && eas build:run --platform ios

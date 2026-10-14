@@ -18,7 +18,7 @@ const auth = getAuth(app);
 const firestore = getFirestore(app);
 const storage = getStorage(app);
 
-export function getEmulatorHost(): string {
+function getEmulatorHost(): string {
   if (Device.isDevice) {
     const lanHost = Constants.expoConfig?.hostUri?.split(":")[0];
     return lanHost ?? "127.0.0.1";
