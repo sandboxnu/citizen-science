@@ -17,7 +17,7 @@ export default function LandingScreen() {
         <Text style={styles.wordmark}>sightline</Text>
       </View>
 
-      <View style={[styles.sheet, { paddingBottom: Spacing.three }]}>
+      <View style={styles.sheet}>
         <Text style={styles.welcome}>Welcome</Text>
 
         <View style={styles.buttons}>
@@ -58,6 +58,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
     paddingTop: Spacing.nine,
+    paddingBottom: 36,
     paddingHorizontal: Spacing.four,
     justifyContent: 'space-between',
   },

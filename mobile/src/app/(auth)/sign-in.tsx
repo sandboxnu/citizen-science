@@ -1,4 +1,5 @@
 import { signInWithEmailAndPassword } from '@react-native-firebase/auth';
+import { doc, getDoc } from '@react-native-firebase/firestore';
 import { Link } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
@@ -6,12 +7,11 @@ import { Pressable, StyleSheet, Text } from 'react-native';
 import { AUTH_PRIMARY, AuthSheet } from '@/components/auth/auth-sheet';
 import { PasswordField, UsernameField } from '@/components/auth/form-field';
 import { Spacing } from '@/constants/theme';
-import { auth } from '@/lib/firebase';
+import { auth, firestore } from '@/lib/firebase';
 
 type FieldErrors = Partial<Record<'email' | 'password', string>>;
 
 export default function SignInScreen() {
-  // TODO: support signing in by username (look up the user's email first).
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -33,12 +33,22 @@ export default function SignInScreen() {
     }
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      // Anything without an @ is a username; look up its email first.
+      let loginEmail = email.trim();
+      if (!loginEmail.includes('@')) {
+        const snapshot = await getDoc(doc(firestore, 'usernames', loginEmail.toLowerCase()));
+        if (!snapshot.exists()) {
+          setFieldErrors({ email: 'No account exists with this username.' });
+          return;
+        }
+        loginEmail = snapshot.data()?.email;
+      }
+      await signInWithEmailAndPassword(auth, loginEmail, password);
     } catch (err) {
       const code = (err as { code?: string }).code;
       switch (code) {
         case 'auth/invalid-email':
-          setFieldErrors({ email: 'Enter a valid email.' });
+          setFieldErrors({ email: 'Enter a valid username or email.' });
           break;
         case 'auth/user-not-found':
           setFieldErrors({ email: 'No account exists for this email. Please create an account first.' });

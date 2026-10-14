@@ -46,6 +46,22 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Username -> email lookup so signed-out users can sign in by username.
+    // Doc ID is the lowercased username. Anyone can get one doc by exact
+    // username, but nobody can list them. Existing docs can't be overwritten,
+    // which also keeps usernames unique.
+    match /usernames/{username} {
+      allow get: if true;
+      allow list: if false;
+
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasOnly(['uid', 'email'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.email == request.auth.token.email;
+
+      allow update, delete: if false;
+    }
+
     // Reports are created by authenticated users for themselves and are
     // immutable afterward. Field set + types are validated to match
     // mobile/src/lib/reports.ts's submitDuringDisasterReport() payload.

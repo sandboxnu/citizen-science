@@ -1,5 +1,5 @@
 import { createUserWithEmailAndPassword } from '@react-native-firebase/auth';
-import { doc, serverTimestamp, setDoc } from '@react-native-firebase/firestore';
+import { doc, getDoc, serverTimestamp, writeBatch } from '@react-native-firebase/firestore';
 import { Link } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -26,10 +26,16 @@ export default function SignUpScreen() {
 
   async function handleSignUp() {
     setError(null);
+    const usernameKey = username.trim().toLowerCase();
     const nextErrors: FieldErrors = {
       firstName: firstName.trim() === '' ? 'Name is required.' : undefined,
       email: email.trim() === '' ? 'Email is required.' : undefined,
-      username: username.trim() === '' ? 'Username is required.' : undefined,
+      username:
+        usernameKey === ''
+          ? 'Username is required.'
+          : /[@/]/.test(usernameKey) || usernameKey.startsWith('.')
+            ? "Username can't contain @ or /, or start with a period."
+            : undefined,
       password: password === '' ? 'Password is required.' : undefined,
     };
     setFieldErrors(nextErrors);
@@ -38,14 +44,23 @@ export default function SignUpScreen() {
     }
 
     try {
+      const usernameRef = doc(firestore, 'usernames', usernameKey);
+      if ((await getDoc(usernameRef)).exists()) {
+        setFieldErrors({ username: 'That username is taken.' });
+        return;
+      }
+
       const credential = await createUserWithEmailAndPassword(auth, email, password);
-      await setDoc(doc(firestore, 'users', credential.user.uid), {
+      const batch = writeBatch(firestore);
+      batch.set(doc(firestore, 'users', credential.user.uid), {
         email: credential.user.email,
         firstName,
         ...(lastName !== '' && { lastName }),
         username,
         createdAt: serverTimestamp(),
       });
+      batch.set(usernameRef, { uid: credential.user.uid, email: credential.user.email });
+      await batch.commit();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Sign up failed');
     }
