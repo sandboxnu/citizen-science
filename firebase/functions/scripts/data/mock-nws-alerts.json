@@ -40,28 +40,33 @@
         ]
       },
       "properties": {
-        "status": "Actual",
-        "messageType": "Alert",
-        "category": "Met",
-        "senderName": "NWS Blacksburg VA",
         "id": "seed-nws-flood-warning",
         "areaDesc": "Watauga, NC",
         "affectedZones": [
-          "https://api.weather.gov/zones/county/NCC189"
+          "https://api.weather.gov/zones/forecast/NCZ018"
         ],
         "sent": "2026-10-15T15:00:00-04:00",
         "effective": "2026-10-15T15:00:00-04:00",
         "onset": "2026-10-15T15:00:00-04:00",
         "expires": "2026-10-15T21:00:00-04:00",
         "ends": "2026-10-16T21:00:00-04:00",
+        "status": "Actual",
+        "messageType": "Alert",
+        "category": "Met",
         "severity": "Severe",
         "certainty": "Likely",
         "urgency": "Expected",
         "response": "Avoid",
         "event": "Flood Warning",
+        "senderName": "NWS Blacksburg VA",
         "headline": "Flood Warning issued October 15 at 3:00PM EDT until October 16 at 9:00PM EDT by NWS Blacksburg VA",
         "description": "...The National Weather Service in Blacksburg has issued a Flood Warning\nfor the following rivers in North Carolina...\n\nSouth Fork New River near Boone affecting Watauga County.\n\n* WHAT...Moderate flooding is forecast.\n\n* WHERE...South Fork New River near Boone.\n\n* WHEN...From this afternoon until Friday evening.\n\n* IMPACTS...At 9.0 feet, water covers portions of Brookshire Road and\nlow-lying fields along the river. Area creeks and streams are running\nhigh and could flood with more heavy rain.\n\n* ADDITIONAL DETAILS...\n- At 2:30 PM EDT Thursday the stage was 8.2 feet.\n- Flood stage is 8.0 feet.\n- Forecast...The river is expected to rise to a crest of 9.4 feet\nearly Friday morning. It will then fall below flood stage Friday\nevening.\n- http://www.weather.gov/safety/flood",
-        "instruction": "Turn around, don't drown when encountering flooded roads. Most flood\ndeaths occur in vehicles.\n\nAdditional information is available at www.weather.gov."
+        "instruction": "Turn around, don't drown when encountering flooded roads. Most flood\ndeaths occur in vehicles.\n\nAdditional information is available at www.weather.gov.",
+        "parameters": {
+          "NWSheadline": [
+            "FLOOD WARNING IN EFFECT UNTIL FRIDAY EVENING"
+          ]
+        }
       }
     },
     {
@@ -95,28 +100,33 @@
         ]
       },
       "properties": {
-        "status": "Actual",
-        "messageType": "Alert",
-        "category": "Met",
-        "senderName": "NWS Blacksburg VA",
         "id": "seed-nws-flash-flood-warning",
         "areaDesc": "Watauga, NC",
         "affectedZones": [
-          "https://api.weather.gov/zones/county/NCC189"
+          "https://api.weather.gov/zones/forecast/NCZ018"
         ],
         "sent": "2026-10-15T15:00:00-04:00",
         "effective": "2026-10-15T15:00:00-04:00",
         "onset": "2026-10-15T15:00:00-04:00",
         "expires": "2026-10-15T18:00:00-04:00",
         "ends": "2026-10-15T18:00:00-04:00",
+        "status": "Actual",
+        "messageType": "Alert",
+        "category": "Met",
         "severity": "Severe",
         "certainty": "Likely",
         "urgency": "Immediate",
         "response": "Avoid",
         "event": "Flash Flood Warning",
+        "senderName": "NWS Blacksburg VA",
         "headline": "Flash Flood Warning issued October 15 at 3:00PM EDT until October 15 at 6:00PM EDT by NWS Blacksburg VA",
         "description": "FFWRNK\n\nThe National Weather Service in Blacksburg has issued a\n\n* Flash Flood Warning for...\nCentral Watauga County in northwestern North Carolina...\n\n* Until 600 PM EDT.\n\n* At 300 PM EDT, Doppler radar indicated thunderstorms producing\nheavy rain across the warned area. Between 2 and 3 inches of rain\nhave fallen. Flash flooding is ongoing or expected to begin shortly.\n\nHAZARD...Flash flooding caused by thunderstorms.\n\nSOURCE...Radar indicated.\n\nIMPACT...Flash flooding of small creeks and streams, urban areas,\nhighways, streets and underpasses as well as other poor\ndrainage and low-lying areas.\n\n* Some locations that will experience flash flooding include...\nBoone, Deerfield and Meat Camp.",
-        "instruction": "Turn around, don't drown when encountering flooded roads. Most flood\ndeaths occur in vehicles.\n\nBe aware of your surroundings and do not drive on flooded roads."
+        "instruction": "Turn around, don't drown when encountering flooded roads. Most flood\ndeaths occur in vehicles.\n\nBe aware of your surroundings and do not drive on flooded roads.",
+        "parameters": {
+          "flashFloodDetection": [
+            "RADAR INDICATED"
+          ]
+        }
       }
     },
     {
@@ -124,29 +134,693 @@
       "id": "seed-nws-flood-watch",
       "geometry": null,
       "properties": {
-        "status": "Actual",
-        "messageType": "Alert",
-        "category": "Met",
-        "senderName": "NWS Blacksburg VA",
         "id": "seed-nws-flood-watch",
-        "areaDesc": "Ashe; Watauga",
+        "areaDesc": "Ashe; Watauga; Wilkes",
         "affectedZones": [
           "https://api.weather.gov/zones/forecast/NCZ001",
-          "https://api.weather.gov/zones/forecast/NCZ018"
+          "https://api.weather.gov/zones/forecast/NCZ018",
+          "https://api.weather.gov/zones/forecast/NCZ019"
         ],
         "sent": "2026-10-15T15:00:00-04:00",
         "effective": "2026-10-15T15:00:00-04:00",
         "onset": "2026-10-15T15:00:00-04:00",
         "expires": "2026-10-16T03:00:00-04:00",
         "ends": "2026-10-17T09:00:00-04:00",
+        "status": "Actual",
+        "messageType": "Update",
+        "category": "Met",
         "severity": "Severe",
         "certainty": "Possible",
         "urgency": "Future",
         "response": "Prepare",
         "event": "Flood Watch",
+        "senderName": "NWS Blacksburg VA",
         "headline": "Flood Watch issued October 15 at 3:00PM EDT until October 17 at 9:00AM EDT by NWS Blacksburg VA",
-        "description": "* WHAT...Flooding caused by excessive rainfall continues to be possible.\n\n* WHERE...Portions of northwest North Carolina, including Ashe and\nWatauga Counties.\n\n* WHEN...Through Saturday morning.\n\n* IMPACTS...Excessive runoff may result in flooding of rivers, creeks,\nstreams, and other low-lying and flood-prone locations.\n\n* ADDITIONAL DETAILS...\n- Periods of heavy rain are expected through Friday night, with\n2 to 4 inches possible in the higher terrain.\n- http://www.weather.gov/safety/flood",
-        "instruction": "You should monitor later forecasts and be prepared to take action\nshould Flash Flood Warnings be issued."
+        "description": "* WHAT...Flooding caused by excessive rainfall continues to be possible.\n\n* WHERE...Portions of northwest North Carolina, including Ashe,\nWatauga and Wilkes Counties.\n\n* WHEN...Through Saturday morning.\n\n* IMPACTS...Excessive runoff may result in flooding of rivers, creeks,\nstreams, and other low-lying and flood-prone locations.\n\n* ADDITIONAL DETAILS...\n- Periods of heavy rain are expected through Friday night, with\n2 to 4 inches possible in the higher terrain.\n- http://www.weather.gov/safety/flood",
+        "instruction": "You should monitor later forecasts and be prepared to take action\nshould Flash Flood Warnings be issued.",
+        "parameters": {},
+        "references": [
+          {
+            "identifier": "seed-nws-flood-watch-original",
+            "sent": "2026-10-15T13:00:00-04:00"
+          }
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "seed-nws-flash-flood-emergency-canton",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -82.95,
+              35.58
+            ],
+            [
+              -82.8,
+              35.6
+            ],
+            [
+              -82.76,
+              35.5
+            ],
+            [
+              -82.92,
+              35.47
+            ],
+            [
+              -82.95,
+              35.58
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "seed-nws-flash-flood-emergency-canton",
+        "areaDesc": "Haywood, NC",
+        "affectedZones": [
+          "https://api.weather.gov/zones/forecast/NCZ052"
+        ],
+        "sent": "2026-10-15T14:30:00-04:00",
+        "effective": "2026-10-15T14:30:00-04:00",
+        "onset": "2026-10-15T14:30:00-04:00",
+        "expires": "2026-10-15T18:30:00-04:00",
+        "ends": "2026-10-15T18:30:00-04:00",
+        "status": "Actual",
+        "messageType": "Alert",
+        "category": "Met",
+        "severity": "Extreme",
+        "certainty": "Observed",
+        "urgency": "Immediate",
+        "response": "Avoid",
+        "event": "Flash Flood Warning",
+        "senderName": "NWS Greenville-Spartanburg SC",
+        "headline": "Flash Flood Warning issued October 15 at 2:30PM EDT until October 15 at 6:30PM EDT by NWS Greenville-Spartanburg SC",
+        "description": "FFWGSP\n\nThe National Weather Service in Greenville-Spartanburg has issued a\n\n* Flash Flood Warning for...\nCentral Haywood County in western North Carolina...\n\n* Until 600 PM EDT.\n\n* At 230 PM EDT, emergency management reported catastrophic flooding\nalong the Pigeon River in Canton. Water rescues are ongoing. Between\n6 and 10 inches of rain have fallen.\n\nThis is a FLASH FLOOD EMERGENCY for Canton and Clyde. This is a\nPARTICULARLY DANGEROUS SITUATION. SEEK HIGHER GROUND NOW!\n\nHAZARD...Life threatening flash flooding.\n\nSOURCE...Emergency management reported.\n\nIMPACT...This is a PARTICULARLY DANGEROUS SITUATION. Severe and\nwidespread flash flooding of homes, businesses, roads and bridges is\nongoing.\n\n* Some locations that will experience flash flooding include...\nCanton, Clyde and Bethel.",
+        "instruction": "This is a FLASH FLOOD EMERGENCY for the Pigeon River in Canton. SEEK\nHIGHER GROUND NOW! Act quickly to protect your life. Do not attempt to\ntravel unless you are fleeing an area subject to flooding or under an\nevacuation order.",
+        "parameters": {
+          "flashFloodDetection": [
+            "OBSERVED"
+          ],
+          "flashFloodDamageThreat": [
+            "CATASTROPHIC"
+          ]
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "seed-nws-flash-flood-warning-asheville",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -82.6,
+              35.62
+            ],
+            [
+              -82.42,
+              35.66
+            ],
+            [
+              -82.36,
+              35.58
+            ],
+            [
+              -82.55,
+              35.54
+            ],
+            [
+              -82.6,
+              35.62
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "seed-nws-flash-flood-warning-asheville",
+        "areaDesc": "Buncombe, NC",
+        "affectedZones": [
+          "https://api.weather.gov/zones/forecast/NCZ053"
+        ],
+        "sent": "2026-10-15T14:45:00-04:00",
+        "effective": "2026-10-15T14:45:00-04:00",
+        "onset": "2026-10-15T14:45:00-04:00",
+        "expires": "2026-10-15T18:00:00-04:00",
+        "ends": "2026-10-15T18:00:00-04:00",
+        "status": "Actual",
+        "messageType": "Alert",
+        "category": "Met",
+        "severity": "Severe",
+        "certainty": "Observed",
+        "urgency": "Immediate",
+        "response": "Avoid",
+        "event": "Flash Flood Warning",
+        "senderName": "NWS Greenville-Spartanburg SC",
+        "headline": "Flash Flood Warning issued October 15 at 2:45PM EDT until October 15 at 6:00PM EDT by NWS Greenville-Spartanburg SC",
+        "description": "FFWGSP\n\nThe National Weather Service in Greenville-Spartanburg has issued a\n\n* Flash Flood Warning for...\nEast Central Buncombe County in western North Carolina...\n\n* Until 600 PM EDT.\n\n* At 245 PM EDT, local law enforcement reported flash flooding along\nthe Swannanoa River. Between 3 and 5 inches of rain have fallen.\n\nHAZARD...Life threatening flash flooding. Thunderstorms producing\nflash flooding.\n\nSOURCE...Law enforcement reported.\n\nIMPACT...Life threatening flash flooding of creeks and streams, urban\nareas, highways, streets and underpasses.\n\n* Some locations that will experience flash flooding include...\nAsheville, Swannanoa, Black Mountain and Biltmore Forest.",
+        "instruction": "Turn around, don't drown when encountering flooded roads. Most flood\ndeaths occur in vehicles.\n\nBe aware of your surroundings and do not drive on flooded roads.",
+        "parameters": {
+          "flashFloodDetection": [
+            "OBSERVED"
+          ],
+          "flashFloodDamageThreat": [
+            "CONSIDERABLE"
+          ]
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "seed-nws-flood-watch-mountains",
+      "geometry": null,
+      "properties": {
+        "id": "seed-nws-flood-watch-mountains",
+        "areaDesc": "Avery; Madison; Yancey; Mitchell; Haywood; Buncombe; Transylvania; Henderson; Caldwell Mountains; Burke Mountains; McDowell Mountains",
+        "affectedZones": [
+          "https://api.weather.gov/zones/forecast/NCZ033",
+          "https://api.weather.gov/zones/forecast/NCZ048",
+          "https://api.weather.gov/zones/forecast/NCZ049",
+          "https://api.weather.gov/zones/forecast/NCZ050",
+          "https://api.weather.gov/zones/forecast/NCZ052",
+          "https://api.weather.gov/zones/forecast/NCZ053",
+          "https://api.weather.gov/zones/forecast/NCZ064",
+          "https://api.weather.gov/zones/forecast/NCZ065",
+          "https://api.weather.gov/zones/forecast/NCZ501",
+          "https://api.weather.gov/zones/forecast/NCZ503",
+          "https://api.weather.gov/zones/forecast/NCZ505"
+        ],
+        "sent": "2026-10-15T14:00:00-04:00",
+        "effective": "2026-10-15T14:00:00-04:00",
+        "onset": "2026-10-15T21:00:00-04:00",
+        "expires": "2026-10-16T09:00:00-04:00",
+        "ends": "2026-10-17T15:00:00-04:00",
+        "status": "Actual",
+        "messageType": "Alert",
+        "category": "Met",
+        "severity": "Severe",
+        "certainty": "Possible",
+        "urgency": "Future",
+        "response": "Prepare",
+        "event": "Flood Watch",
+        "senderName": "NWS Greenville-Spartanburg SC",
+        "headline": "Flood Watch issued October 15 at 2:00PM EDT until October 17 at 3:00PM EDT by NWS Greenville-Spartanburg SC",
+        "description": "* WHAT...Flash flooding caused by excessive rainfall is possible.\n\n* WHERE...Portions of western North Carolina, including the\nfollowing counties, Avery, Buncombe, Haywood, Henderson, Madison,\nMitchell, Transylvania and Yancey, and the mountains of Burke,\nCaldwell and McDowell.\n\n* WHEN...From this evening through Saturday afternoon.\n\n* IMPACTS...Excessive runoff may result in flooding of rivers, creeks,\nstreams, and other low-lying and flood-prone locations. Landslides\nand debris flows are possible in steep terrain.\n\n* ADDITIONAL DETAILS...\n- Tropical moisture will bring 4 to 8 inches of rain to the\nmountains, with locally higher amounts along the Blue Ridge\nEscarpment.\n- http://www.weather.gov/safety/flood",
+        "instruction": "You should monitor later forecasts and be prepared to take action\nshould Flash Flood Warnings be issued.",
+        "parameters": {}
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "seed-nws-flash-flood-warning-charlotte",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.95,
+              35.3
+            ],
+            [
+              -80.75,
+              35.32
+            ],
+            [
+              -80.7,
+              35.15
+            ],
+            [
+              -80.9,
+              35.12
+            ],
+            [
+              -80.95,
+              35.3
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "seed-nws-flash-flood-warning-charlotte",
+        "areaDesc": "Mecklenburg, NC",
+        "affectedZones": [
+          "https://api.weather.gov/zones/forecast/NCZ071"
+        ],
+        "sent": "2026-10-15T14:30:00-04:00",
+        "effective": "2026-10-15T14:30:00-04:00",
+        "onset": "2026-10-15T13:30:00-04:00",
+        "expires": "2026-10-15T16:30:00-04:00",
+        "ends": "2026-10-15T16:30:00-04:00",
+        "status": "Actual",
+        "messageType": "Update",
+        "category": "Met",
+        "severity": "Severe",
+        "certainty": "Likely",
+        "urgency": "Immediate",
+        "response": "Avoid",
+        "event": "Flash Flood Warning",
+        "senderName": "NWS Greenville-Spartanburg SC",
+        "headline": "Flash Flood Warning issued October 15 at 2:30PM EDT until October 15 at 4:30PM EDT by NWS Greenville-Spartanburg SC",
+        "description": "At 230 PM EDT, Doppler radar and automated rain gauges indicated\nthunderstorms producing heavy rain across the warned area. Between 2\nand 3 inches of rain have fallen. Flash flooding is ongoing or\nexpected to begin shortly.\n\nHAZARD...Flash flooding caused by thunderstorms.\n\nSOURCE...Radar and automated rain gauges.\n\nIMPACT...Flash flooding of small creeks and streams, urban areas,\nhighways, streets and underpasses as well as other poor\ndrainage and low-lying areas.\n\nSome locations that will experience flash flooding include...\nCharlotte, Matthews, Mint Hill and Pineville.",
+        "instruction": "Turn around, don't drown when encountering flooded roads. Most flood\ndeaths occur in vehicles.\n\nBe aware of your surroundings and do not drive on flooded roads.",
+        "parameters": {
+          "NWSheadline": [
+            "FLASH FLOOD WARNING REMAINS IN EFFECT UNTIL 430 PM EDT FOR CENTRAL MECKLENBURG COUNTY"
+          ],
+          "flashFloodDetection": [
+            "RADAR AND GAUGE INDICATED"
+          ]
+        },
+        "references": [
+          {
+            "identifier": "seed-nws-flash-flood-warning-charlotte-original",
+            "sent": "2026-10-15T12:30:00-04:00"
+          }
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "seed-nws-flood-watch-triangle",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -79.0,
+              36.25
+            ],
+            [
+              -78.25,
+              36.1
+            ],
+            [
+              -78.1,
+              35.4
+            ],
+            [
+              -78.95,
+              35.55
+            ],
+            [
+              -79.0,
+              36.25
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "seed-nws-flood-watch-triangle",
+        "areaDesc": "Durham; Wake; Johnston",
+        "affectedZones": [
+          "https://api.weather.gov/zones/forecast/NCZ025",
+          "https://api.weather.gov/zones/forecast/NCZ041",
+          "https://api.weather.gov/zones/forecast/NCZ042"
+        ],
+        "sent": "2026-10-15T13:00:00-04:00",
+        "effective": "2026-10-15T13:00:00-04:00",
+        "onset": "2026-10-15T18:00:00-04:00",
+        "expires": "2026-10-16T06:00:00-04:00",
+        "ends": "2026-10-16T21:00:00-04:00",
+        "status": "Actual",
+        "messageType": "Alert",
+        "category": "Met",
+        "severity": "Severe",
+        "certainty": "Possible",
+        "urgency": "Future",
+        "response": "Prepare",
+        "event": "Flood Watch",
+        "senderName": "NWS Raleigh NC",
+        "headline": "Flood Watch issued October 15 at 1:00PM EDT until October 16 at 9:00PM EDT by NWS Raleigh NC",
+        "description": "* WHAT...Flooding caused by excessive rainfall is possible.\n\n* WHERE...Portions of central North Carolina, including Durham, Wake\nand Johnston Counties.\n\n* WHEN...From 6 PM EDT this evening through Friday evening.\n\n* IMPACTS...Excessive runoff may result in flooding of rivers, creeks,\nstreams, and other low-lying and flood-prone locations. Flooding may\noccur in poor drainage and urban areas.\n\n* ADDITIONAL DETAILS...\n- 2 to 4 inches of rain is expected, with locally higher amounts.\n- http://www.weather.gov/safety/flood",
+        "instruction": "You should monitor later forecasts and be prepared to take action\nshould Flash Flood Warnings be issued.",
+        "parameters": {}
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "seed-nws-flood-warning-raleigh",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -78.75,
+              35.86
+            ],
+            [
+              -78.6,
+              35.87
+            ],
+            [
+              -78.58,
+              35.8
+            ],
+            [
+              -78.73,
+              35.79
+            ],
+            [
+              -78.75,
+              35.86
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "seed-nws-flood-warning-raleigh",
+        "areaDesc": "Wake, NC",
+        "affectedZones": [
+          "https://api.weather.gov/zones/forecast/NCZ041"
+        ],
+        "sent": "2026-10-15T14:15:00-04:00",
+        "effective": "2026-10-15T14:15:00-04:00",
+        "onset": "2026-10-15T14:15:00-04:00",
+        "expires": "2026-10-15T20:00:00-04:00",
+        "ends": "2026-10-15T20:00:00-04:00",
+        "status": "Actual",
+        "messageType": "Alert",
+        "category": "Met",
+        "severity": "Severe",
+        "certainty": "Observed",
+        "urgency": "Immediate",
+        "response": "Avoid",
+        "event": "Flood Warning",
+        "senderName": "NWS Raleigh NC",
+        "headline": "Flood Warning issued October 15 at 2:15PM EDT until October 15 at 8:00PM EDT by NWS Raleigh NC",
+        "description": "* WHAT...Flooding caused by excessive rainfall is occurring.\n\n* WHERE...A portion of central North Carolina, including Wake County.\n\n* WHEN...Until 800 PM EDT.\n\n* IMPACTS...Minor flooding of Crabtree Creek. Water over portions of\nGlenwood Avenue near Crabtree Valley Mall and Lassiter Mill Road.\n\n* ADDITIONAL DETAILS...\n- At 215 PM EDT, gauge reports indicated Crabtree Creek at\nAnderson Drive was above flood stage and still rising.\n- http://www.weather.gov/safety/flood",
+        "instruction": "Turn around, don't drown when encountering flooded roads. Most flood\ndeaths occur in vehicles.\n\nAdditional information is available at www.weather.gov.",
+        "parameters": {}
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "seed-nws-flood-warning-fayetteville",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -78.9,
+              35.15
+            ],
+            [
+              -78.84,
+              35.16
+            ],
+            [
+              -78.8,
+              34.98
+            ],
+            [
+              -78.86,
+              34.97
+            ],
+            [
+              -78.9,
+              35.15
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "seed-nws-flood-warning-fayetteville",
+        "areaDesc": "Cumberland, NC",
+        "affectedZones": [
+          "https://api.weather.gov/zones/forecast/NCZ088"
+        ],
+        "sent": "2026-10-15T14:00:00-04:00",
+        "effective": "2026-10-15T14:00:00-04:00",
+        "onset": "2026-10-14T19:00:00-04:00",
+        "expires": "2026-10-16T11:00:00-04:00",
+        "ends": null,
+        "status": "Actual",
+        "messageType": "Update",
+        "category": "Met",
+        "severity": "Severe",
+        "certainty": "Observed",
+        "urgency": "Immediate",
+        "response": "Avoid",
+        "event": "Flood Warning",
+        "senderName": "NWS Raleigh NC",
+        "headline": "Flood Warning issued October 15 at 2:00PM EDT by NWS Raleigh NC",
+        "description": "...The Flood Warning continues for the following rivers in North\nCarolina...\n\nCape Fear River at Fayetteville affecting Cumberland County.\n\n* WHAT...Major flooding is occurring and major flooding is forecast.\n\n* WHERE...Cape Fear River at Fayetteville.\n\n* WHEN...Until further notice.\n\n* IMPACTS...At 58.0 feet, water reaches homes in the Cross Creek and\nRiver Road areas. Several roads near the river become impassable.\n\n* ADDITIONAL DETAILS...\n- At 1:00 PM EDT Thursday the stage was 56.4 feet.\n- Flood stage is 35.0 feet.\n- Forecast...The river is expected to rise to a crest of 58.6 feet\nSaturday morning.\n- http://www.weather.gov/safety/flood",
+        "instruction": "Turn around, don't drown when encountering flooded roads. Most flood\ndeaths occur in vehicles.\n\nAdditional information is available at www.weather.gov.",
+        "parameters": {
+          "NWSheadline": [
+            "FLOOD WARNING REMAINS IN EFFECT UNTIL FURTHER NOTICE"
+          ]
+        },
+        "references": [
+          {
+            "identifier": "seed-nws-flood-warning-fayetteville-original",
+            "sent": "2026-10-15T12:00:00-04:00"
+          }
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "seed-nws-flood-warning-lumberton",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -79.1,
+              34.68
+            ],
+            [
+              -79.04,
+              34.69
+            ],
+            [
+              -78.95,
+              34.56
+            ],
+            [
+              -79.01,
+              34.55
+            ],
+            [
+              -79.1,
+              34.68
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "seed-nws-flood-warning-lumberton",
+        "areaDesc": "Robeson, NC",
+        "affectedZones": [
+          "https://api.weather.gov/zones/forecast/NCZ087"
+        ],
+        "sent": "2026-10-15T13:30:00-04:00",
+        "effective": "2026-10-15T13:30:00-04:00",
+        "onset": "2026-10-14T13:00:00-04:00",
+        "expires": "2026-10-16T13:00:00-04:00",
+        "ends": "2026-10-17T17:00:00-04:00",
+        "status": "Actual",
+        "messageType": "Update",
+        "category": "Met",
+        "severity": "Severe",
+        "certainty": "Likely",
+        "urgency": "Expected",
+        "response": "Avoid",
+        "event": "Flood Warning",
+        "senderName": "NWS Wilmington NC",
+        "headline": "Flood Warning issued October 15 at 1:30PM EDT until October 17 at 5:00PM EDT by NWS Wilmington NC",
+        "description": "...The Flood Warning continues for the following rivers in North\nCarolina...\n\nLumber River at Lumberton affecting Robeson County.\n\n* WHAT...Moderate flooding is forecast.\n\n* WHERE...Lumber River at Lumberton.\n\n* WHEN...Until Saturday afternoon.\n\n* IMPACTS...At 17.0 feet, flooding of homes in low-lying areas of\nwest Lumberton begins. Water covers portions of Interstate 95\naccess roads.\n\n* ADDITIONAL DETAILS...\n- At 1:15 PM EDT Thursday the stage was 16.3 feet.\n- Flood stage is 13.0 feet.\n- http://www.weather.gov/safety/flood",
+        "instruction": null,
+        "parameters": {},
+        "references": [
+          {
+            "identifier": "seed-nws-flood-warning-lumberton-original",
+            "sent": "2026-10-15T11:30:00-04:00"
+          }
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "seed-nws-flood-warning-greenville",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -77.5,
+              35.64
+            ],
+            [
+              -77.4,
+              35.66
+            ],
+            [
+              -77.25,
+              35.6
+            ],
+            [
+              -77.33,
+              35.57
+            ],
+            [
+              -77.5,
+              35.64
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "seed-nws-flood-warning-greenville",
+        "areaDesc": "Pitt, NC",
+        "affectedZones": [
+          "https://api.weather.gov/zones/forecast/NCZ044"
+        ],
+        "sent": "2026-10-15T14:45:00-04:00",
+        "effective": "2026-10-15T14:45:00-04:00",
+        "onset": "2026-10-16T03:00:00-04:00",
+        "expires": "2026-10-16T15:00:00-04:00",
+        "ends": "2026-10-18T15:00:00-04:00",
+        "status": "Actual",
+        "messageType": "Alert",
+        "category": "Met",
+        "severity": "Severe",
+        "certainty": "Likely",
+        "urgency": "Expected",
+        "response": "Avoid",
+        "event": "Flood Warning",
+        "senderName": "NWS Newport/Morehead City NC",
+        "headline": "Flood Warning issued October 15 at 2:45PM EDT until October 18 at 3:00PM EDT by NWS Newport/Morehead City NC",
+        "description": "...The National Weather Service in Newport/Morehead City has issued a\nFlood Warning for the following rivers in North Carolina...\n\nTar River at Greenville affecting Pitt County.\n\n* WHAT...Minor flooding is forecast.\n\n* WHERE...Tar River at Greenville.\n\n* WHEN...From Friday morning until Sunday afternoon.\n\n* IMPACTS...At 14.0 feet, minor flooding of the Town Common and\nlow-lying areas along the river.\n\n* ADDITIONAL DETAILS...\n- At 2:00 PM EDT Thursday the stage was 11.8 feet.\n- Flood stage is 13.0 feet.\n- Forecast...The river is expected to rise above flood stage Friday\nmorning to a crest of 14.6 feet Saturday evening.\n- http://www.weather.gov/safety/flood",
+        "instruction": "Turn around, don't drown when encountering flooded roads. Most flood\ndeaths occur in vehicles.\n\nAdditional information is available at www.weather.gov.",
+        "parameters": {}
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "seed-nws-flood-warning-kinston-cancelled",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -77.7,
+              35.3
+            ],
+            [
+              -77.6,
+              35.31
+            ],
+            [
+              -77.5,
+              35.24
+            ],
+            [
+              -77.58,
+              35.22
+            ],
+            [
+              -77.7,
+              35.3
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "seed-nws-flood-warning-kinston-cancelled",
+        "areaDesc": "Lenoir, NC",
+        "affectedZones": [
+          "https://api.weather.gov/zones/forecast/NCZ091"
+        ],
+        "sent": "2026-10-15T14:30:00-04:00",
+        "effective": "2026-10-15T14:30:00-04:00",
+        "onset": "2026-10-15T14:30:00-04:00",
+        "expires": "2026-10-15T15:15:00-04:00",
+        "ends": "2026-10-15T14:30:00-04:00",
+        "status": "Actual",
+        "messageType": "Cancel",
+        "category": "Met",
+        "severity": "Minor",
+        "certainty": "Observed",
+        "urgency": "Past",
+        "response": "AllClear",
+        "event": "Flood Warning",
+        "senderName": "NWS Newport/Morehead City NC",
+        "headline": "The Flood Warning has been cancelled.",
+        "description": "The Flood Warning has been cancelled and is no longer in effect.",
+        "instruction": null,
+        "parameters": {},
+        "references": [
+          {
+            "identifier": "seed-nws-flood-warning-kinston-cancelled-original",
+            "sent": "2026-10-15T12:30:00-04:00"
+          }
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "seed-nws-flash-flood-warning-wilmington",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -77.98,
+              34.3
+            ],
+            [
+              -77.82,
+              34.31
+            ],
+            [
+              -77.78,
+              34.15
+            ],
+            [
+              -77.93,
+              34.13
+            ],
+            [
+              -77.98,
+              34.3
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "seed-nws-flash-flood-warning-wilmington",
+        "areaDesc": "New Hanover, NC",
+        "affectedZones": [
+          "https://api.weather.gov/zones/forecast/NCZ107",
+          "https://api.weather.gov/zones/forecast/NCZ108"
+        ],
+        "sent": "2026-10-15T14:54:00-04:00",
+        "effective": "2026-10-15T14:54:00-04:00",
+        "onset": "2026-10-15T14:54:00-04:00",
+        "expires": "2026-10-15T17:54:00-04:00",
+        "ends": "2026-10-15T17:54:00-04:00",
+        "status": "Actual",
+        "messageType": "Alert",
+        "category": "Met",
+        "severity": "Severe",
+        "certainty": "Likely",
+        "urgency": "Immediate",
+        "response": "Avoid",
+        "event": "Flash Flood Warning",
+        "senderName": "NWS Wilmington NC",
+        "headline": "Flash Flood Warning issued October 15 at 2:54PM EDT until October 15 at 5:54PM EDT by NWS Wilmington NC",
+        "description": "FFWILM\n\nThe National Weather Service in Wilmington has issued a\n\n* Flash Flood Warning for...\nNew Hanover County in southeastern North Carolina...\n\n* Until 545 PM EDT.\n\n* At 254 PM EDT, Doppler radar indicated heavy rain from tropical\nrain bands across the warned area. Between 3 and 5 inches of rain\nhave fallen, coinciding with high tide.\n\nHAZARD...Flash flooding caused by heavy rain.\n\nSOURCE...Radar indicated.\n\nIMPACT...Flash flooding of small creeks and streams, urban areas,\nhighways, streets and underpasses as well as other poor\ndrainage and low-lying areas.\n\n* Some locations that will experience flash flooding include...\nWilmington, Wrightsville Beach, Carolina Beach and Kure Beach.",
+        "instruction": "Turn around, don't drown when encountering flooded roads. Most flood\ndeaths occur in vehicles.\n\nBe aware of your surroundings and do not drive on flooded roads.",
+        "parameters": {
+          "flashFloodDetection": [
+            "RADAR INDICATED"
+          ]
+        }
       }
     }
   ]

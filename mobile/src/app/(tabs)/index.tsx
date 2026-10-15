@@ -9,7 +9,7 @@ import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useAuth } from '@/lib/auth-context';
 import { auth } from '@/lib/firebase';
-import { fetchHazardZones, type HazardZone } from '@/lib/hazard-zones';
+import { fetchNwsAlerts, type NwsAlert } from '@/lib/nws-alerts';
 
 const MOCK_USER_LOCATION = { latitude: 36.2, longitude: -81.7 };
 const MOCK_LOCATION_ACCURACY_METERS = 30;
@@ -22,14 +22,14 @@ const DEFAULT_REGION = {
 
 export default function MapScreen() {
   const { user } = useAuth();
-  const [hazardZones, setHazardZones] = useState<HazardZone[]>([]);
+  const [nwsAlerts, setNwsAlerts] = useState<NwsAlert[]>([]);
   const [error, setError] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
-    fetchHazardZones()
-      .then((zones) => {
-        if (isMounted) setHazardZones(zones);
+    fetchNwsAlerts()
+      .then((alerts) => {
+        if (isMounted) setNwsAlerts(alerts);
       })
       .catch(() => {
         if (isMounted) setError(true);
@@ -45,10 +45,10 @@ export default function MapScreen() {
         style={styles.map}
         initialRegion={DEFAULT_REGION}
       >
-        {hazardZones.flatMap((zone) =>
-          zone.polygons.map((polygon, i) => (
+        {nwsAlerts.flatMap((alert) =>
+          alert.polygons.map((polygon, i) => (
             <Polygon
-              key={`${zone.id}-${i}`}
+              key={`${alert.id}-${i}`}
               coordinates={polygon.outer}
               holes={polygon.holes}
               fillColor="rgba(33,150,243,0.5)"
@@ -73,7 +73,7 @@ export default function MapScreen() {
         <ThemedText type="small">Signed in as {user?.email}</ThemedText>
         {error && (
           <ThemedText type="small" themeColor="textSecondary">
-            Couldn&apos;t load hazard zones.
+            Couldn&apos;t load flood alerts.
           </ThemedText>
         )}
         <Pressable onPress={() => signOut(auth)}>

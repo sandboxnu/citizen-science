@@ -14,7 +14,10 @@ const db = admin.firestore();
 // nws_alerts, in the same shape pollNWSAlerts writes. NC often has no active
 // flood alerts, so this is what the map and alert popup are built against.
 // data/mock-nws-alerts.json is an api.weather.gov/alerts/active response, so
-// real alerts can be pasted in; their times are shifted to start now.
+// real alerts can be pasted in. It covers the variety the poller sees: Flood
+// Warning / Flash Flood Warning / Flood Watch, Alert / Update / Cancel
+// messages, Extreme (Flash Flood Emergency) to Minor severity, watches with
+// and without a shape, and alerts missing `ends` or `instruction`.
 
 type NWSFeature = {
   geometry: unknown | null;
@@ -27,10 +30,12 @@ const { features }: { features: NWSFeature[] } = JSON.parse(
   fs.readFileSync(path.join(__dirname, "data/mock-nws-alerts.json"), "utf-8")
 );
 
-// Shift every date by the same amount so the alert was sent now and stays
-// active for its original duration.
+// Shift every date in the file by the same amount so the newest alert was sent
+// now and the rest keep their timing relative to it (sent earlier, starting
+// later, already ended, ...).
+const offset = Date.now() - Math.max(...features.map(({ properties }) => Date.parse(properties.sent)));
+
 function shiftToNow(properties: NWSFeature["properties"]) {
-  const offset = Date.now() - Date.parse(properties.sent);
   const shifted: Record<string, unknown> = { ...properties };
   for (const field of DATE_FIELDS) {
     const value = properties[field];

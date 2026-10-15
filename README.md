@@ -52,7 +52,7 @@ Emulator UI (data + logs) while running: `http://127.0.0.1:4000`.
 
 ### 3. Seeding
 
-`npm run dev` seeds the emulator automatically with mock data around Boone, NC (the map's default location). To change what's on the map while it's running, from the repo root:
+`npm run dev` seeds the emulator automatically with mock NWS flood alerts around Boone, NC (the map's default location). The app only reads NWS alerts for now. To change what's on the map while it's running, from the repo root:
 
 ```bash
 npm run seed:client-mock   # client's predicted flood boundaries -> hazard_zones

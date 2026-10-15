@@ -87,9 +87,9 @@ They're excluded from lint and from `firebase deploy`. The mock seeds and
 
 | Command | Writes | Data |
 | --- | --- | --- |
-| `npm run seed` | both below | Runs `seed:client-mock` and `seed:nws-mock` (what `npm run dev` uses) |
+| `npm run seed` | both below | Runs `seed:client-mock` and `seed:nws-mock` |
 | `npm run seed:client-mock` | `hazard_zones` | 30 of the client's predicted flood boundaries, from `scripts/data/mock-client-flood-zones.json` |
-| `npm run seed:nws-mock` | `nws_alerts` | 3 mock NWS flood alerts, from `scripts/data/mock-nws-alerts.json` |
+| `npm run seed:nws-mock` | `nws_alerts` | 3 mock NWS flood alerts, from `scripts/data/mock-nws-alerts.json` (what `npm run dev` uses) |
 | `npm run seed:clear` | `hazard_zones`, `nws_alerts` | Empties both (leaves users alone) |
 | `npm run seed:client` | `hazard_zones` | Real client data from `scripts/data/Unified_FIM.gpkg` (gitignored, ask the team) |
 | `npm run seed:export-client-mock` | file only | Regenerates `mock-client-flood-zones.json` from the gpkg |
