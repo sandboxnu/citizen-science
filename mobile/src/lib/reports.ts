@@ -39,10 +39,40 @@ export type SubmitPostDisasterReportInput = {
   concerns: Concern[];
 };
 
-// TODO: implement
 export async function submitPostDisasterReport(
   input: SubmitPostDisasterReportInput
-): Promise<void> {}
+): Promise<void> {
+    const currentUser = auth.currentUser;
+
+    if (!currentUser) {
+      throw new Error('Must be signed in to submit a report');
+    }
+    if (input.userId !== currentUser.uid) {
+      throw new Error('userId does not match the signed-in user');
+    }
+    const observedAt = new Date(input.observedAt);
+    if (Number.isNaN(observedAt.getTime())) {
+      throw new Error(`Invalid observedAt: ${input.observedAt}`);
+    }
+
+    await addDoc(collection(firestore, 'reports'), {
+    userId: input.userId,
+    disasterType: input.disasterType,
+    location: new GeoPoint(input.latitude, input.longitude),
+    observedAt: Timestamp.fromDate(observedAt),
+    concerns: input.concerns.map((c) => ({
+        type: c.type,
+         ...(c.type === "other" && { otherDescription: c.otherDescription }),
+        damageRating: c.damageRating, 
+        description: c.description, 
+        photoUrls: c.photoUrls.map((p) => ({
+      url: p.url,
+      location: new GeoPoint(p.latitude, p.longitude)
+      }))
+    }))
+  })
+}
+
 
 export async function submitDuringDisasterReport(
   input: SubmitDuringDisasterReportInput
@@ -70,3 +100,4 @@ export async function submitDuringDisasterReport(
     ...(input.description !== undefined && { description: input.description }),
   });
 }
+
