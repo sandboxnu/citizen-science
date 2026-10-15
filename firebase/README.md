@@ -39,7 +39,7 @@ Run these once, from the `firebase/` directory.
    The project (`citizen-science-platform`) is already set in `.firebaserc`, so
    you don't need to run `firebase use`.
 
-3. Install dependencies. Cloud Functions and the seed script share
+3. Install dependencies. Cloud Functions and the seed scripts share
    `functions/package.json`:
 
    ```bash
@@ -73,35 +73,51 @@ the steps separately instead:
    npm run seed
    ```
 
-   This writes 5 fake NC flood alerts (warnings, a watch, and an advisory) to
-   the `hazard_zones` collection. Browse them at
-   http://localhost:4000/firestore. Their expiry times are relative to when you
-   run the script, so re-run it to refresh them.
+   This writes mock data around Boone, NC (the Map tab's default location).
+   Browse it at http://localhost:4000/firestore.
 
 Emulator data is cleared when the emulators stop, so run `npm run seed` again
 after each restart.
 
 ## Seed data
 
-[`functions/scripts/seed.ts`](functions/scripts/seed.ts) exists because there are often no active
-NC flood alerts from the National Weather Service to build the map against. It
-only ever writes to the local emulator, never to production. It's excluded
-from lint and from `firebase deploy`, so it never ships with the functions.
+All seed scripts only ever write to the local emulator, never to production.
+They're excluded from lint and from `firebase deploy`. The mock seeds and
+`seed:clear` can also be run from the repo root.
 
-Each `hazard_zones` document uses the field names from the NWS alerts API
-(`event`, `severity`, `certainty`, `urgency`, `headline`, `areaDesc`,
-`expires`, ...), with two differences:
+| Command | Writes | Data |
+| --- | --- | --- |
+| `npm run seed` | both below | Runs `seed:client-mock` and `seed:nws-mock` (what `npm run dev` uses) |
+| `npm run seed:client-mock` | `hazard_zones` | 30 of the client's predicted flood boundaries, from `scripts/data/mock-client-flood-zones.json` |
+| `npm run seed:nws-mock` | `nws_alerts` | 3 mock NWS flood alerts, from `scripts/data/mock-nws-alerts.json` |
+| `npm run seed:clear` | `hazard_zones`, `nws_alerts` | Empties both (leaves users alone) |
+| `npm run seed:client` | `hazard_zones` | Real client data from `scripts/data/Unified_FIM.gpkg` (gitignored, ask the team) |
+| `npm run seed:export-client-mock` | file only | Regenerates `mock-client-flood-zones.json` from the gpkg |
+| `npm run seed:users` | Auth, `users` | Test users |
 
-- `onset` and `expires` are Firestore Timestamps instead of strings.
-- `geometry` is a GeoJSON Polygon **stored as a JSON string**, because
-  Firestore does not support nested arrays. Parse it before rendering:
+### `hazard_zones` (client flood boundaries)
 
-  ```ts
-  const polygon = JSON.parse(doc.geometry); // { type: "Polygon", coordinates: [[[lng, lat], ...]] }
-  ```
+Shapes only: `{ geometry, active, ingestedAt }`.
 
-The polygons are real NC boundaries: county and coastal zones from
-`api.weather.gov/zones`, simplified, plus one real flash flood warning polygon.
+### `nws_alerts` (NWS flood alerts)
+
+Written by `pollNWSAlerts` in production. NC often has no active flood alerts,
+so `seed:nws-mock` provides a Flood Warning, a Flash Flood Warning, and a
+Flood Watch. Each doc is an NWS alert's `properties` (`event`, `severity`,
+`onset`, `ends`, `description`, `instruction`, ...) plus `geometry` and
+`ingestedAt`. `mock-nws-alerts.json` is an `api.weather.gov/alerts/active`
+response, so you can paste real alerts into it; the seed shifts their times to
+start now.
+
+In both collections, `geometry` is GeoJSON **stored as a JSON string**, because
+Firestore does not support nested arrays. Parse it before rendering:
+
+```ts
+const polygon = JSON.parse(doc.geometry); // { type: "Polygon", coordinates: [[[lng, lat], ...]] }
+```
+
+In `nws_alerts`, `geometry` is `null` for alerts NWS sends without a shape
+(mostly Flood Watches, which only list `affectedZones`).
 
 ## Troubleshooting
 

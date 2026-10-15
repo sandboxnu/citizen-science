@@ -1,0 +1,153 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "seed-nws-flood-warning",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -81.738,
+              36.183
+            ],
+            [
+              -81.712,
+              36.214
+            ],
+            [
+              -81.684,
+              36.226
+            ],
+            [
+              -81.668,
+              36.214
+            ],
+            [
+              -81.694,
+              36.196
+            ],
+            [
+              -81.718,
+              36.172
+            ],
+            [
+              -81.738,
+              36.183
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "status": "Actual",
+        "messageType": "Alert",
+        "category": "Met",
+        "senderName": "NWS Blacksburg VA",
+        "id": "seed-nws-flood-warning",
+        "areaDesc": "Watauga, NC",
+        "affectedZones": [
+          "https://api.weather.gov/zones/county/NCC189"
+        ],
+        "sent": "2026-10-15T15:00:00-04:00",
+        "effective": "2026-10-15T15:00:00-04:00",
+        "onset": "2026-10-15T15:00:00-04:00",
+        "expires": "2026-10-15T21:00:00-04:00",
+        "ends": "2026-10-16T21:00:00-04:00",
+        "severity": "Severe",
+        "certainty": "Likely",
+        "urgency": "Expected",
+        "response": "Avoid",
+        "event": "Flood Warning",
+        "headline": "Flood Warning issued October 15 at 3:00PM EDT until October 16 at 9:00PM EDT by NWS Blacksburg VA",
+        "description": "...The National Weather Service in Blacksburg has issued a Flood Warning\nfor the following rivers in North Carolina...\n\nSouth Fork New River near Boone affecting Watauga County.\n\n* WHAT...Moderate flooding is forecast.\n\n* WHERE...South Fork New River near Boone.\n\n* WHEN...From this afternoon until Friday evening.\n\n* IMPACTS...At 9.0 feet, water covers portions of Brookshire Road and\nlow-lying fields along the river. Area creeks and streams are running\nhigh and could flood with more heavy rain.\n\n* ADDITIONAL DETAILS...\n- At 2:30 PM EDT Thursday the stage was 8.2 feet.\n- Flood stage is 8.0 feet.\n- Forecast...The river is expected to rise to a crest of 9.4 feet\nearly Friday morning. It will then fall below flood stage Friday\nevening.\n- http://www.weather.gov/safety/flood",
+        "instruction": "Turn around, don't drown when encountering flooded roads. Most flood\ndeaths occur in vehicles.\n\nAdditional information is available at www.weather.gov."
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "seed-nws-flash-flood-warning",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -81.688,
+              36.236
+            ],
+            [
+              -81.646,
+              36.244
+            ],
+            [
+              -81.632,
+              36.219
+            ],
+            [
+              -81.664,
+              36.203
+            ],
+            [
+              -81.688,
+              36.236
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "status": "Actual",
+        "messageType": "Alert",
+        "category": "Met",
+        "senderName": "NWS Blacksburg VA",
+        "id": "seed-nws-flash-flood-warning",
+        "areaDesc": "Watauga, NC",
+        "affectedZones": [
+          "https://api.weather.gov/zones/county/NCC189"
+        ],
+        "sent": "2026-10-15T15:00:00-04:00",
+        "effective": "2026-10-15T15:00:00-04:00",
+        "onset": "2026-10-15T15:00:00-04:00",
+        "expires": "2026-10-15T18:00:00-04:00",
+        "ends": "2026-10-15T18:00:00-04:00",
+        "severity": "Severe",
+        "certainty": "Likely",
+        "urgency": "Immediate",
+        "response": "Avoid",
+        "event": "Flash Flood Warning",
+        "headline": "Flash Flood Warning issued October 15 at 3:00PM EDT until October 15 at 6:00PM EDT by NWS Blacksburg VA",
+        "description": "FFWRNK\n\nThe National Weather Service in Blacksburg has issued a\n\n* Flash Flood Warning for...\nCentral Watauga County in northwestern North Carolina...\n\n* Until 600 PM EDT.\n\n* At 300 PM EDT, Doppler radar indicated thunderstorms producing\nheavy rain across the warned area. Between 2 and 3 inches of rain\nhave fallen. Flash flooding is ongoing or expected to begin shortly.\n\nHAZARD...Flash flooding caused by thunderstorms.\n\nSOURCE...Radar indicated.\n\nIMPACT...Flash flooding of small creeks and streams, urban areas,\nhighways, streets and underpasses as well as other poor\ndrainage and low-lying areas.\n\n* Some locations that will experience flash flooding include...\nBoone, Deerfield and Meat Camp.",
+        "instruction": "Turn around, don't drown when encountering flooded roads. Most flood\ndeaths occur in vehicles.\n\nBe aware of your surroundings and do not drive on flooded roads."
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "seed-nws-flood-watch",
+      "geometry": null,
+      "properties": {
+        "status": "Actual",
+        "messageType": "Alert",
+        "category": "Met",
+        "senderName": "NWS Blacksburg VA",
+        "id": "seed-nws-flood-watch",
+        "areaDesc": "Ashe; Watauga",
+        "affectedZones": [
+          "https://api.weather.gov/zones/forecast/NCZ001",
+          "https://api.weather.gov/zones/forecast/NCZ018"
+        ],
+        "sent": "2026-10-15T15:00:00-04:00",
+        "effective": "2026-10-15T15:00:00-04:00",
+        "onset": "2026-10-15T15:00:00-04:00",
+        "expires": "2026-10-16T03:00:00-04:00",
+        "ends": "2026-10-17T09:00:00-04:00",
+        "severity": "Severe",
+        "certainty": "Possible",
+        "urgency": "Future",
+        "response": "Prepare",
+        "event": "Flood Watch",
+        "headline": "Flood Watch issued October 15 at 3:00PM EDT until October 17 at 9:00AM EDT by NWS Blacksburg VA",
+        "description": "* WHAT...Flooding caused by excessive rainfall continues to be possible.\n\n* WHERE...Portions of northwest North Carolina, including Ashe and\nWatauga Counties.\n\n* WHEN...Through Saturday morning.\n\n* IMPACTS...Excessive runoff may result in flooding of rivers, creeks,\nstreams, and other low-lying and flood-prone locations.\n\n* ADDITIONAL DETAILS...\n- Periods of heavy rain are expected through Friday night, with\n2 to 4 inches possible in the higher terrain.\n- http://www.weather.gov/safety/flood",
+        "instruction": "You should monitor later forecasts and be prepared to take action\nshould Flash Flood Warnings be issued."
+      }
+    }
+  ]
+}

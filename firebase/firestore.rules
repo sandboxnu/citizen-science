@@ -3,9 +3,16 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Hazard zones are written only by the server (Cloud Functions).
-    // Any client can read them to display flood alerts on the map.
+    // Predicted flood boundaries from the client's data. Written only by the
+    // server. Any client can read them to display on the map.
     match /hazard_zones/{zoneId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Active NWS flood alerts, written only by pollNWSAlerts. Any client can
+    // read them to display on the map.
+    match /nws_alerts/{alertId} {
       allow read: if true;
       allow write: if false;
     }

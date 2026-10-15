@@ -2,10 +2,11 @@ import * as fs from "fs";
 import * as path from "path";
 import * as gdal from "gdal-async";
 
-// Regenerates scripts/data/mock-hazard-zones.json, the committed data seed.ts
-// writes on every `npm run dev`. Picks the largest real flood polygons from
-// data/Unified_FIM.gpkg (gitignored, ask the team for it) near the Map tab's
-// default location, so the seed looks exactly like what seed-client produces.
+// Regenerates scripts/data/mock-client-flood-zones.json, the committed data
+// seed-client-mock.ts writes on every `npm run dev`. Picks the largest real
+// flood polygons from data/Unified_FIM.gpkg (gitignored, ask the team for it)
+// near the Map tab's default location, so the seed looks exactly like what
+// seed-client produces.
 // Run from functions/ with: npm run seed:export-client-mock
 
 // Keep in sync with MOCK_USER_LOCATION in mobile/src/app/(tabs)/index.tsx
@@ -49,6 +50,6 @@ candidates
     zones[`seed-${fid}`] = geometry;
   });
 
-const outPath = path.join(__dirname, "data/mock-hazard-zones.json");
+const outPath = path.join(__dirname, "data/mock-client-flood-zones.json");
 fs.writeFileSync(outPath, JSON.stringify(zones) + "\n");
 console.log(`Wrote ${Object.keys(zones).length} of ${candidates.length} nearby zones to ${outPath}`);

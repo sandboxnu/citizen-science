@@ -27,7 +27,7 @@ interface NWSFeature {
 const db = admin.firestore();
 
 // Polls NWS API for active NC flood alerts every 5 minutes and upserts
-// them into hazard_zones.
+// them into nws_alerts.
 export const pollNWSAlerts = onSchedule("every 5 minutes", async () => {
   logger.info("pollNWSAlerts triggered");
   const response = await fetch(NWS_ALERTS_URL, {
@@ -55,7 +55,7 @@ export const pollNWSAlerts = onSchedule("every 5 minutes", async () => {
     const batch = db.batch();
 
     for (const {geometry, properties} of alerts.slice(i, i + BATCH_LIMIT)) {
-      batch.set(db.collection("hazard_zones").doc(properties.id as string), {
+      batch.set(db.collection("nws_alerts").doc(properties.id as string), {
         ...properties,
         geometry: geometry ? JSON.stringify(geometry) : null,
         ingestedAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -65,5 +65,5 @@ export const pollNWSAlerts = onSchedule("every 5 minutes", async () => {
     await batch.commit();
   }
 
-  logger.info(`pollNWSAlerts upserted ${alerts.length} hazard zones`);
+  logger.info(`pollNWSAlerts upserted ${alerts.length} NWS alerts`);
 });

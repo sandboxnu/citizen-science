@@ -50,6 +50,18 @@ Starts the Firebase emulator (local, isolated Firestore/Auth/Storage/Functions) 
 
 Emulator UI (data + logs) while running: `http://127.0.0.1:4000`.
 
+### 3. Seeding
+
+`npm run dev` seeds the emulator automatically with mock data around Boone, NC (the map's default location). To change what's on the map while it's running, from the repo root:
+
+```bash
+npm run seed:client-mock   # client's predicted flood boundaries -> hazard_zones
+npm run seed:nws-mock      # NWS flood alerts -> nws_alerts
+npm run seed:clear         # empty hazard_zones and nws_alerts
+```
+
+`seed:clear` doesn't touch users. For a full reset, restart `npm run dev`. More detail in [`firebase/README.md`](firebase/README.md#seed-data).
+
 ## Implementing Figma designs (optional, Claude Code only)
 
 Reference: https://developers.figma.com/docs/figma-mcp-server/remote-server-installation/#claude-code

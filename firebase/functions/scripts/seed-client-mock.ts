@@ -1,6 +1,7 @@
 import * as admin from "firebase-admin";
 import * as path from "path";
 import * as fs from "fs";
+import { assertEmulatorRunning } from "./emulator";
 
 // Points to local emulator — do not change
 process.env.FIRESTORE_EMULATOR_HOST = "127.0.0.1:8080";
@@ -9,10 +10,14 @@ admin.initializeApp({ projectId: "citizen-science-platform-dev" });
 
 const db = admin.firestore();
 
+// Seeds a small sample of the client's predicted flood boundaries (from
+// data/Unified_FIM.gpkg) into hazard_zones, in the same shape seed-client
+// writes. Regenerate the data with: npm run seed:export-client-mock
+
 type PolygonGeometry = { type: "Polygon"; coordinates: [number, number][][] };
 
 const mockHazardZones: Record<string, PolygonGeometry> = JSON.parse(
-  fs.readFileSync(path.join(__dirname, "data/mock-hazard-zones.json"), "utf-8")
+  fs.readFileSync(path.join(__dirname, "data/mock-client-flood-zones.json"), "utf-8")
 );
 
 const hazardZones: Record<string, { geometry: string }> = Object.fromEntries(
@@ -20,6 +25,8 @@ const hazardZones: Record<string, { geometry: string }> = Object.fromEntries(
 );
 
 async function seed() {
+  await assertEmulatorRunning();
+
   const batch = db.batch();
 
   Object.entries(hazardZones).forEach(([id, zone]) => {
@@ -32,7 +39,7 @@ async function seed() {
   });
 
   await batch.commit();
-  console.log(`Seeded ${Object.keys(hazardZones).length} hazard zones into Firestore.`);
+  console.log(`Seeded ${Object.keys(hazardZones).length} mock client flood zones into hazard_zones.`);
 }
 
 seed().catch(console.error);

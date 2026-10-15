@@ -4,7 +4,10 @@
   "scripts": {
     "dev": "concurrently -n firebase,mobile -c blue,green \"npm:dev:firebase\" \"npm:dev:mobile\"",
     "dev:firebase": "npm --prefix firebase/functions run build && npm --prefix firebase/functions run dev",
-    "dev:mobile": "cd mobile && npx expo start --dev-client --ios"
+    "dev:mobile": "cd mobile && npx expo start --dev-client --ios",
+    "seed:client-mock": "npm --prefix firebase/functions run seed:client-mock",
+    "seed:nws-mock": "npm --prefix firebase/functions run seed:nws-mock",
+    "seed:clear": "npm --prefix firebase/functions run seed:clear"
   },
   "devDependencies": {
     "concurrently": "^9.0.0"
