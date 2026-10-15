@@ -1,14 +1,15 @@
 import { Redirect } from 'expo-router';
-import { NativeTabs } from 'expo-router/native-tabs';
-import { useColorScheme } from 'react-native';
+import { TabList, TabSlot, TabTrigger, Tabs } from 'expo-router/ui';
+import { StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Colors } from '@/constants/theme';
+import { TabBarButton } from '@/components/tab-bar-button';
+import { NavBarColors, Spacing } from '@/constants/theme';
 import { useAuth } from '@/lib/auth-context';
 
 export default function TabsLayout() {
   const { user, initializing } = useAuth();
-  const scheme = useColorScheme();
-  const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
+  const insets = useSafeAreaInsets();
 
   if (initializing) {
     return null;
@@ -19,37 +20,39 @@ export default function TabsLayout() {
   }
 
   return (
-    <NativeTabs
-      backgroundColor={colors.background}
-      indicatorColor={colors.backgroundElement}
-      labelStyle={{ selected: { color: colors.text } }}>
-      <NativeTabs.Trigger name="index">
-        <NativeTabs.Trigger.Label>Map</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon
-          src={require('@/assets/images/tabIcons/home.png')}
-          renderingMode="template"
-        />
-      </NativeTabs.Trigger>
-
-      <NativeTabs.Trigger name="feed">
-        <NativeTabs.Trigger.Label>Feed</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf="doc.text" />
-      </NativeTabs.Trigger>
-
-      <NativeTabs.Trigger name="report">
-        <NativeTabs.Trigger.Label>Report</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf="plus.circle" />
-      </NativeTabs.Trigger>
-
-      <NativeTabs.Trigger name="alerts">
-        <NativeTabs.Trigger.Label>Alerts</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf="bell" />
-      </NativeTabs.Trigger>
-
-      <NativeTabs.Trigger name="profile">
-        <NativeTabs.Trigger.Label>Profile</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf="person.crop.circle" />
-      </NativeTabs.Trigger>
-    </NativeTabs>
+    <Tabs style={styles.container}>
+      <TabSlot />
+      <TabList style={[styles.bar, { paddingBottom: insets.bottom + Spacing.two }]}>
+        <TabTrigger name="index" href="/" asChild>
+          <TabBarButton label="Map" icon={require('@/assets/images/navIcons/map.svg')} />
+        </TabTrigger>
+        <TabTrigger name="feed" href="/feed" asChild>
+          <TabBarButton label="Feed" icon={require('@/assets/images/navIcons/feed.svg')} />
+        </TabTrigger>
+        <TabTrigger name="report" href="/report" asChild>
+          <TabBarButton label="Report" icon={require('@/assets/images/navIcons/report.svg')} variant="action" />
+        </TabTrigger>
+        <TabTrigger name="alerts" href="/alerts" asChild>
+          <TabBarButton label="Alerts" icon={require('@/assets/images/navIcons/alerts.svg')} />
+        </TabTrigger>
+        <TabTrigger name="profile" href="/profile" asChild>
+          <TabBarButton label="Profile" icon={require('@/assets/images/navIcons/profile.svg')} />
+        </TabTrigger>
+      </TabList>
+    </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  bar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: Spacing.three,
+    paddingHorizontal: 20,
+    backgroundColor: NavBarColors.background,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: NavBarColors.border,
+  },
+});
