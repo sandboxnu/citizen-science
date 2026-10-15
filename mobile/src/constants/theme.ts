@@ -33,6 +33,29 @@ export const NavBarColors = {
   action: '#BFDCF7',
 } as const;
 
+// Flood alert popup palette from the SIGHTLINE Figma handoff.
+export const AlertSheetColors = {
+  background: '#FFFFFF',
+  text: '#1C1B1F',
+  textSecondary: '#49454F',
+  primary: '#054A91',
+  onPrimary: '#FFFFFF',
+  handle: '#C4C4C4',
+  pill: '#EEEEEE',
+  border: '#E6E6E6',
+  backdrop: 'rgba(0,0,0,0.35)',
+  lastUpdatedDot: '#2F6FDB',
+} as const;
+
+// Severity chip colors, keyed by NWS `severity`.
+export const SeverityColors: Record<string, { background: string; text: string }> = {
+  Extreme: { background: '#B3261E', text: '#FFFFFF' },
+  Severe: { background: '#E0672A', text: '#FFFFFF' },
+  Moderate: { background: '#F2B13D', text: '#1C1B1F' },
+  Minor: { background: '#E0E1E6', text: '#1C1B1F' },
+  Unknown: { background: '#E0E1E6', text: '#1C1B1F' },
+};
+
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
 
 export const Fonts = Platform.select({

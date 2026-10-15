@@ -62,6 +62,16 @@ npm run seed:clear         # empty hazard_zones and nws_alerts
 
 `seed:clear` doesn't touch users. For a full reset, restart `npm run dev`. More detail in [`firebase/README.md`](firebase/README.md#seed-data).
 
+#### Mock NWS alerts without the emulator
+
+If the map stays empty because Firestore can't reach the emulator (e.g. on a simulator other than iOS 26.1), dev builds can read the NWS mock alerts straight from `firebase/functions/scripts/data/mock-nws-alerts.json` instead. Create `mobile/.env.local` (gitignored) with:
+
+```bash
+EXPO_PUBLIC_MOCK_NWS_ALERTS=true
+```
+
+Then restart `npm run dev` — Expo only reads env files when Metro starts. Dates are shifted to now, the same as `seed:nws-mock`. Delete the line (and restart) to go back to Firestore. Release builds always use Firestore.
+
 ## Implementing Figma designs (optional, Claude Code only)
 
 Reference: https://developers.figma.com/docs/figma-mcp-server/remote-server-installation/#claude-code

@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import MapView, { Circle, Marker, Polygon } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AlertSheet } from '@/components/alert-sheet';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
@@ -24,6 +25,7 @@ export default function MapScreen() {
   const { user } = useAuth();
   const [nwsAlerts, setNwsAlerts] = useState<NwsAlert[]>([]);
   const [error, setError] = useState(false);
+  const [selectedAlert, setSelectedAlert] = useState<NwsAlert | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -54,6 +56,8 @@ export default function MapScreen() {
               fillColor="rgba(33,150,243,0.5)"
               strokeColor="rgba(13,71,161,0.9)"
               strokeWidth={2}
+              tappable
+              onPress={() => setSelectedAlert(alert)}
             />
           ))
         )}
@@ -80,6 +84,8 @@ export default function MapScreen() {
           <ThemedText type="linkPrimary">Sign out</ThemedText>
         </Pressable>
       </SafeAreaView>
+
+      <AlertSheet alert={selectedAlert} onClose={() => setSelectedAlert(null)} />
     </ThemedView>
   );
 }
