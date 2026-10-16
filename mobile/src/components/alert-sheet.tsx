@@ -80,7 +80,7 @@ export function AlertSheet({ alert, onClose }: AlertSheetProps) {
 
               <View style={styles.chips}>
                 <View style={[styles.chip, styles.activeChip]}>
-                  <Text style={[styles.chipText, styles.activeChipText]}>Active</Text>
+                  <Text style={[styles.chipText, styles.activeChipText]}>Active Disaster</Text>
                 </View>
                 <View style={[styles.chip, { backgroundColor: severityColors.background }]}>
                   <Text style={[styles.chipText, { color: severityColors.text }]}>{details.severity}</Text>
