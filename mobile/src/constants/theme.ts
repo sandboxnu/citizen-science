@@ -40,6 +40,7 @@ export const AlertSheetColors = {
   textSecondary: '#49454F',
   primary: '#054A91',
   onPrimary: '#FFFFFF',
+  inactive: '#E0672A',
   handle: '#C4C4C4',
   pill: '#EEEEEE',
   border: '#E6E6E6',

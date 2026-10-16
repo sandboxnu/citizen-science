@@ -5,6 +5,8 @@ import type { NwsAlert } from '@/lib/nws-alerts';
 export type AlertDetails = {
   title: string;
   severity: string;
+  // Whether the event is happening now: it has started and hasn't ended.
+  isActive: boolean;
   lastUpdated: string;
   startDate?: string;
   endDate?: string;
@@ -99,14 +101,16 @@ function parseDescription(description: string | undefined) {
   return { additionalDetails: orUndefined(unwrapNwsText(description)) };
 }
 
-export function toAlertDetails(alert: NwsAlert): AlertDetails {
+export function toAlertDetails(alert: NwsAlert, now: number = Date.now()): AlertDetails {
   const sent = parseDate(alert.sent);
   const start = parseDate(alert.onset ?? alert.effective);
   const end = parseDate(alert.ends ?? alert.expires);
+  const isActive = (!start || start.getTime() <= now) && (!end || end.getTime() > now);
 
   return {
     title: alert.event,
     severity: alert.severity,
+    isActive,
     lastUpdated: sent ? formatTime(sent) : '',
     startDate: start && formatDateTime(start),
     endDate: end && formatDateTime(end),

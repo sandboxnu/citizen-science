@@ -79,8 +79,10 @@ export function AlertSheet({ alert, onClose }: AlertSheetProps) {
               <Text style={styles.title}>{details.title}</Text>
 
               <View style={styles.chips}>
-                <View style={[styles.chip, styles.activeChip]}>
-                  <Text style={[styles.chipText, styles.activeChipText]}>Active Disaster</Text>
+                <View style={[styles.chip, details.isActive ? styles.activeChip : styles.inactiveChip]}>
+                  <Text style={[styles.chipText, styles.statusChipText]}>
+                    {details.isActive ? 'Active Disaster' : 'Inactive'}
+                  </Text>
                 </View>
                 <View style={[styles.chip, { backgroundColor: severityColors.background }]}>
                   <Text style={[styles.chipText, { color: severityColors.text }]}>{details.severity}</Text>
@@ -182,8 +184,9 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   activeChip: { backgroundColor: AlertSheetColors.primary },
+  inactiveChip: { backgroundColor: AlertSheetColors.inactive },
   chipText: { fontSize: 14, fontWeight: '500' },
-  activeChipText: { color: AlertSheetColors.onPrimary },
+  statusChipText: { color: AlertSheetColors.onPrimary },
   lastUpdated: { flexDirection: 'row', alignItems: 'center', gap: Spacing.one },
   dot: {
     width: 6,
