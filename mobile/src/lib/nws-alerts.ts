@@ -40,23 +40,11 @@ function isActive(alert: NwsAlertDoc): boolean {
   return !alert.expires || Date.parse(alert.expires) > Date.now();
 }
 
-// Dev builds can skip Firestore and read the bundled mock alerts instead.
-const USE_MOCK_NWS_ALERTS = __DEV__ && process.env.EXPO_PUBLIC_MOCK_NWS_ALERTS === 'true';
-
-async function getNwsAlertDocs(): Promise<{ id: string; data: NwsAlertDoc }[]> {
-  if (USE_MOCK_NWS_ALERTS) {
-    // require() inside the branch so release builds don't bundle the mock data.
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { getMockNwsAlertDocs } = require('@/lib/mock-nws-alerts') as typeof import('@/lib/mock-nws-alerts');
-    return getMockNwsAlertDocs() as { id: string; data: NwsAlertDoc }[];
-  }
-
-  const snapshot = await getDocs(collection(firestore, 'nws_alerts'));
-  return snapshot.docs.map((doc) => ({ id: doc.id, data: doc.data() as NwsAlertDoc }));
-}
-
 export async function fetchNwsAlerts(): Promise<NwsAlert[]> {
-  return (await getNwsAlertDocs())
+  const snapshot = await getDocs(collection(firestore, 'nws_alerts'));
+
+  return snapshot.docs
+    .map((doc) => ({ id: doc.id, data: doc.data() as NwsAlertDoc }))
     .filter(({ data }) => isActive(data))
     .map(({ id, data: { geometry, ...fields } }) => ({ ...fields, id, polygons: parsePolygons(geometry) }));
 }
