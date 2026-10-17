@@ -10,7 +10,7 @@ import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useAuth } from '@/lib/auth-context';
 import { auth } from '@/lib/firebase';
-import { fetchNwsAlerts, type NwsAlert } from '@/lib/nws-alerts';
+import { subscribeToNwsAlerts, type NwsAlert } from '@/lib/nws-alerts';
 
 const MOCK_USER_LOCATION = { latitude: 36.2, longitude: -81.7 };
 const MOCK_LOCATION_ACCURACY_METERS = 30;
@@ -27,19 +27,17 @@ export default function MapScreen() {
   const [error, setError] = useState(false);
   const [selectedAlert, setSelectedAlert] = useState<NwsAlert | null>(null);
 
-  useEffect(() => {
-    let isMounted = true;
-    fetchNwsAlerts()
-      .then((alerts) => {
-        if (isMounted) setNwsAlerts(alerts);
-      })
-      .catch(() => {
-        if (isMounted) setError(true);
-      });
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+  useEffect(
+    () =>
+      subscribeToNwsAlerts(
+        (alerts) => {
+          setNwsAlerts(alerts);
+          setError(false);
+        },
+        () => setError(true)
+      ),
+    []
+  );
 
   return (
     <ThemedView style={styles.container}>
