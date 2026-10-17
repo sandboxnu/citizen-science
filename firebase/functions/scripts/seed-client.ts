@@ -1,11 +1,6 @@
 import * as admin from "firebase-admin";
 import * as gdal from 'gdal-async';
-
-// TODO: use this in place of Record<string, unknown> below, and validate
-// records against it before writing (see seed-client.test.ts)
-export interface ClientFloodRecord {
-  geometry: string;
-}
+import { isClientFloodRecord, type ClientFloodRecord } from "./client-flood-record";
 
 // Points to local emulator — do not change
 process.env.FIRESTORE_EMULATOR_HOST = "127.0.0.1:8080";
@@ -19,30 +14,6 @@ const MAX_RECORDS = Number(process.env.MAX_RECORDS) || 50
 const clientData: Record<string, ClientFloodRecord> = {};
 
 const dataset = gdal.open("data/Unified_FIM.gpkg");
-
-export function isClientFloodRecord(flood_record: unknown): flood_record is ClientFloodRecord {
-  if (typeof flood_record !== 'object' || flood_record === null) {
-    console.log("Invalid flood record: not an object or null");
-    return false;
-  }
-
-  const potential = flood_record as Record<string, unknown>;
-  let geom;
-
-  if (typeof potential.geometry === "string") {
-    try {
-     geom = JSON.parse(potential.geometry)
-    } catch {
-      return false;
-    }
-
-    return geom.coordinates.every((ring: any) => 
-      ring.every((val: number[]) => val.every((coord: number) => Number.isFinite(coord)))
-    );
-  }
-  return false
-}
-
 
 const layer = dataset.layers.get(0);
 
