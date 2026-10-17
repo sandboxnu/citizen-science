@@ -13,6 +13,8 @@ export type NwsAlert = {
   messageType: string;
   severity: string;
   sent: string;
+  areaDesc?: string;
+  effective?: string;
   onset?: string;
   ends?: string;
   expires?: string;
