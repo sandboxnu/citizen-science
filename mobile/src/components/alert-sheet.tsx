@@ -6,7 +6,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } fr
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN } from 'react-native-worklets';
 
-import { AlertSheetColors, SeverityColors, Spacing } from '@/constants/theme';
+import { AlertSheetColors, FontFamily, SeverityColors, Spacing } from '@/constants/theme';
 import { toAlertDetails } from '@/lib/alert-details';
 import type { NwsAlert } from '@/lib/nws-alerts';
 
@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
     color: AlertSheetColors.text,
   },
   chips: { flexDirection: 'row', gap: Spacing.one },
@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
   },
   activeChip: { backgroundColor: AlertSheetColors.primary },
   inactiveChip: { backgroundColor: AlertSheetColors.inactive },
-  chipText: { fontSize: 14, fontWeight: '500' },
+  chipText: { fontSize: 14, fontFamily: FontFamily.medium },
   statusChipText: { color: AlertSheetColors.onPrimary },
   lastUpdated: { flexDirection: 'row', alignItems: 'center', gap: Spacing.one },
   dot: {
@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     backgroundColor: AlertSheetColors.lastUpdatedDot,
   },
-  secondaryText: { fontSize: 13, color: AlertSheetColors.textSecondary },
+  secondaryText: { fontFamily: FontFamily.regular, fontSize: 13, color: AlertSheetColors.textSecondary },
   dates: { alignItems: 'flex-start', gap: Spacing.two, marginTop: Spacing.three },
   pill: {
     backgroundColor: AlertSheetColors.pill,
@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.one,
     paddingHorizontal: Spacing.two,
   },
-  pillText: { fontSize: 13, color: AlertSheetColors.text },
+  pillText: { fontFamily: FontFamily.regular, fontSize: 13, color: AlertSheetColors.text },
   divider: {
     height: 1,
     backgroundColor: AlertSheetColors.border,
@@ -222,8 +222,8 @@ const styles = StyleSheet.create({
   },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
   sectionIcon: { width: 22, height: 22 },
-  sectionTitle: { fontSize: 18, fontWeight: '500', color: AlertSheetColors.text },
-  sectionText: { fontSize: 15, lineHeight: 21, color: AlertSheetColors.text },
+  sectionTitle: { fontSize: 18, fontFamily: FontFamily.medium, color: AlertSheetColors.text },
+  sectionText: { fontFamily: FontFamily.regular, fontSize: 15, lineHeight: 21, color: AlertSheetColors.text },
   footer: {
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.four,
@@ -234,5 +234,5 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.seven,
     alignItems: 'center',
   },
-  buttonText: { fontSize: 16, color: AlertSheetColors.onPrimary },
+  buttonText: { fontFamily: FontFamily.regular, fontSize: 16, color: AlertSheetColors.onPrimary },
 });

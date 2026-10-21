@@ -78,9 +78,7 @@ export default function MapScreen() {
             Couldn&apos;t load flood alerts.
           </ThemedText>
         )}
-        <Pressable onPress={() => signOut(auth)}>
-          <ThemedText type="linkPrimary">Sign out</ThemedText>
-        </Pressable>
+        
       </SafeAreaView>
 
       <AlertSheet alert={selectedAlert} onClose={() => setSelectedAlert(null)} />
