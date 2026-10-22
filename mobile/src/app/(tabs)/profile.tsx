@@ -40,9 +40,13 @@ export default function ProfileScreen() {
     if (!user) {
       return;
     }
-    return onSnapshot(doc(firestore, 'users', user.uid), (snapshot) => {
-      setProfile((snapshot.data() as UserProfile | undefined) ?? null);
-    });
+    return onSnapshot(
+      doc(firestore, 'users', user.uid),
+      (snapshot) => {
+        setProfile((snapshot.data() as UserProfile | undefined) ?? null);
+      },
+      () => setProfile(null)
+    );
   }, [user]);
 
   const fullName = profile ? [profile.firstName, profile.lastName].filter(Boolean).join(' ') : '';
