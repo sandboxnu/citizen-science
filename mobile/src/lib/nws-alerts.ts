@@ -1,11 +1,7 @@
 import { firestore } from '@/lib/firebase';
 import { parseHazardZoneGeometry, type HazardPolygon } from '@/lib/hazard-zones';
-import { collection, getDocs } from '@react-native-firebase/firestore';
+import { collection, onSnapshot, type Unsubscribe } from '@react-native-firebase/firestore';
 
-// An NWS flood alert from the nws_alerts collection (written by
-// pollNWSAlerts, or seed:nws-mock locally). Field names follow
-// api.weather.gov/alerts. polygons is empty for alerts NWS sends without a
-// shape (mostly Flood Watches).
 export type NwsAlert = {
   id: string;
   polygons: HazardPolygon[];
@@ -13,6 +9,8 @@ export type NwsAlert = {
   messageType: string;
   severity: string;
   sent: string;
+  areaDesc?: string;
+  effective?: string;
   onset?: string;
   ends?: string;
   expires?: string;
@@ -31,18 +29,27 @@ function parsePolygons(geometry: string | null | undefined): HazardPolygon[] {
   }
 }
 
-// NWS's active feed includes "this alert has been cancelled" messages, and
-// alerts can expire between polls, so neither should be shown.
 function isActive(alert: NwsAlertDoc): boolean {
-  if (alert.messageType === 'Cancel') return false;
+  if (alert.messageType === 'Cancel') {
+    return false;
+  } 
   return !alert.expires || Date.parse(alert.expires) > Date.now();
 }
 
-export async function fetchNwsAlerts(): Promise<NwsAlert[]> {
-  const snapshot = await getDocs(collection(firestore, 'nws_alerts'));
-
-  return snapshot.docs
-    .map((doc) => ({ id: doc.id, data: doc.data() as NwsAlertDoc }))
-    .filter(({ data }) => isActive(data))
-    .map(({ id, data: { geometry, ...fields } }) => ({ ...fields, id, polygons: parsePolygons(geometry) }));
+export function subscribeToNwsAlerts(
+  onChange: (alerts: NwsAlert[]) => void,
+  onError: (error: Error) => void
+): Unsubscribe {
+  return onSnapshot(
+    collection(firestore, 'nws_alerts'),
+    (snapshot) => {
+      onChange(
+        snapshot.docs
+          .map((doc) => ({ id: doc.id, data: doc.data() as NwsAlertDoc }))
+          .filter(({ data }) => isActive(data))
+          .map(({ id, data: { geometry, ...fields } }) => ({ ...fields, id, polygons: parsePolygons(geometry) }))
+      );
+    },
+    onError
+  );
 }

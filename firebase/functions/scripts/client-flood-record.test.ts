@@ -1,5 +1,5 @@
 import { describe, expect, test } from "@jest/globals";
-import { isClientFloodRecord } from "./seed-client";
+import { isClientFloodRecord } from "./client-flood-record";
 
 describe("ClientFloodRecord validation", () => {
   

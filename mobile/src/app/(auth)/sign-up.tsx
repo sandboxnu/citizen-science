@@ -4,9 +4,9 @@ import { Link } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { AUTH_PRIMARY, AuthSheet } from '@/components/auth/auth-sheet';
+import { AuthSheet } from '@/components/auth/auth-sheet';
 import { FormField, PasswordField, UsernameField } from '@/components/auth/form-field';
-import { Spacing } from '@/constants/theme';
+import { AuthColors, FontFamily, Spacing } from '@/constants/theme';
 import { auth, firestore } from '@/lib/firebase';
 
 type FieldErrors = Partial<Record<'firstName' | 'email' | 'username' | 'password', string>>;
@@ -143,14 +143,14 @@ export default function SignUpScreen() {
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: Spacing.three },
   rowItem: { flex: 1, fontSize: 14 },
-  error: { color: '#d33', fontSize: 14 },
+  error: { color: AuthColors.error, fontFamily: FontFamily.regular, fontSize: 14 },
   button: {
-    backgroundColor: AUTH_PRIMARY,
+    backgroundColor: AuthColors.primary,
     paddingVertical: Spacing.ten,
     borderRadius: Spacing.two,
     alignItems: 'center',
     marginTop: Spacing.four,
   },
-  buttonText: { color: '#ffffff', fontSize: 14 },
-  link: { color: AUTH_PRIMARY, fontSize: 14, textAlign: 'center' },
+  buttonText: { color: AuthColors.onPrimary, fontFamily: FontFamily.regular, fontSize: 14 },
+  link: { color: AuthColors.primary, fontFamily: FontFamily.regular, fontSize: 14, textAlign: 'center' },
 });

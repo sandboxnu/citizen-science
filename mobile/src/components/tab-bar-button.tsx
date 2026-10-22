@@ -1,10 +1,14 @@
 import { Image, type ImageSource } from 'expo-image';
 import type { TabTriggerSlotProps } from 'expo-router/ui';
+import type { ComponentRef, Ref } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { NavBarColors, Spacing } from '@/constants/theme';
+import { FontFamily, NavBarColors, Spacing } from '@/constants/theme';
 
-type TabBarButtonProps = TabTriggerSlotProps & {
+// expo-router types the slot ref as RefAttributes<View>, which no longer matches Pressable's
+// ref now that View is a function component, so swap in Pressable's own ref type.
+type TabBarButtonProps = Omit<TabTriggerSlotProps, 'ref'> & {
+  ref?: Ref<ComponentRef<typeof Pressable>>;
   label: string;
   icon: ImageSource | number;
   // The center "+" action renders as a label-less circle instead of an icon + label.
@@ -58,7 +62,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 13,
-    fontWeight: 500,
+    fontFamily: FontFamily.medium,
     color: NavBarColors.foreground,
   },
   actionCircle: {

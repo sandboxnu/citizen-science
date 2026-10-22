@@ -1,11 +1,6 @@
 import { StyleSheet, Text, TextInput, View, type TextInputProps, type ViewStyle } from 'react-native';
 
-import { Spacing } from '@/constants/theme';
-
-const PRIMARY = '#1F4A8C';
-const REQUIRED = '#E75A0E';
-const BORDER = '#BDBDBD';
-const PLACEHOLDER = '#B3B3B3';
+import { AuthColors, FontFamily, Spacing } from '@/constants/theme';
 
 export type FormFieldProps = Omit<TextInputProps, 'style'> & {
   label: string;
@@ -23,7 +18,7 @@ export function FormField({ label, required, error, style, ...inputProps }: Form
       </Text>
       <TextInput
         style={[styles.input, error && styles.inputError]}
-        placeholderTextColor={PLACEHOLDER}
+        placeholderTextColor={AuthColors.placeholder}
         {...inputProps}
       />
       {error && <Text style={styles.error}>{error}</Text>}
@@ -61,17 +56,18 @@ export function PasswordField({ label = 'Password', ...props }: PresetFieldProps
 }
 
 const styles = StyleSheet.create({
-  label: { color: PRIMARY, fontSize: 14, marginBottom: Spacing.two },
-  required: { color: REQUIRED },
+  label: { color: AuthColors.fieldLabel, fontFamily: FontFamily.regular, fontSize: 14, marginBottom: Spacing.two },
+  required: { color: AuthColors.required },
   input: {
     borderWidth: 1,
-    borderColor: BORDER,
+    borderColor: AuthColors.inputBorder,
     borderRadius: Spacing.one,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.ten,
+    fontFamily: FontFamily.regular,
     fontSize: 14,
-    color: '#111111',
+    color: AuthColors.inputText,
   },
-  inputError: { borderColor: REQUIRED },
-  error: { color: REQUIRED, fontSize: 12, marginTop: Spacing.one },
+  inputError: { borderColor: AuthColors.required },
+  error: { color: AuthColors.required, fontFamily: FontFamily.regular, fontSize: 12, marginTop: Spacing.one },
 });

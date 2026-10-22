@@ -4,12 +4,13 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import MapView, { Circle, Marker, Polygon } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AlertSheet } from '@/components/alert-sheet';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useAuth } from '@/lib/auth-context';
 import { auth } from '@/lib/firebase';
-import { fetchNwsAlerts, type NwsAlert } from '@/lib/nws-alerts';
+import { subscribeToNwsAlerts, type NwsAlert } from '@/lib/nws-alerts';
 
 const MOCK_USER_LOCATION = { latitude: 36.2, longitude: -81.7 };
 const MOCK_LOCATION_ACCURACY_METERS = 30;
@@ -24,20 +25,19 @@ export default function MapScreen() {
   const { user } = useAuth();
   const [nwsAlerts, setNwsAlerts] = useState<NwsAlert[]>([]);
   const [error, setError] = useState(false);
+  const [selectedAlert, setSelectedAlert] = useState<NwsAlert | null>(null);
 
-  useEffect(() => {
-    let isMounted = true;
-    fetchNwsAlerts()
-      .then((alerts) => {
-        if (isMounted) setNwsAlerts(alerts);
-      })
-      .catch(() => {
-        if (isMounted) setError(true);
-      });
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+  useEffect(
+    () =>
+      subscribeToNwsAlerts(
+        (alerts) => {
+          setNwsAlerts(alerts);
+          setError(false);
+        },
+        () => setError(true)
+      ),
+    []
+  );
 
   return (
     <ThemedView style={styles.container}>
@@ -54,6 +54,8 @@ export default function MapScreen() {
               fillColor="rgba(33,150,243,0.5)"
               strokeColor="rgba(13,71,161,0.9)"
               strokeWidth={2}
+              tappable
+              onPress={() => setSelectedAlert(alert)}
             />
           ))
         )}
@@ -76,10 +78,10 @@ export default function MapScreen() {
             Couldn&apos;t load flood alerts.
           </ThemedText>
         )}
-        <Pressable onPress={() => signOut(auth)}>
-          <ThemedText type="linkPrimary">Sign out</ThemedText>
-        </Pressable>
+        
       </SafeAreaView>
+
+      <AlertSheet alert={selectedAlert} onClose={() => setSelectedAlert(null)} />
     </ThemedView>
   );
 }

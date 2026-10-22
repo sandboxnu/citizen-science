@@ -4,9 +4,9 @@ import { Link } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
 
-import { AUTH_PRIMARY, AuthSheet } from '@/components/auth/auth-sheet';
+import { AuthSheet } from '@/components/auth/auth-sheet';
 import { PasswordField, UsernameField } from '@/components/auth/form-field';
-import { Spacing } from '@/constants/theme';
+import { AuthColors, FontFamily, Spacing } from '@/constants/theme';
 import { auth, firestore } from '@/lib/firebase';
 
 type FieldErrors = Partial<Record<'email' | 'password', string>>;
@@ -111,16 +111,16 @@ export default function SignInScreen() {
 
 const styles = StyleSheet.create({
   forgot: { alignSelf: 'flex-end' },
-  error: { color: '#d33', fontSize: 14 },
+  error: { color: AuthColors.error, fontFamily: FontFamily.regular, fontSize: 14 },
   button: {
-    backgroundColor: AUTH_PRIMARY,
+    backgroundColor: AuthColors.primary,
     paddingVertical: Spacing.ten,
     borderRadius: Spacing.two,
     alignItems: 'center',
     marginTop: Spacing.four,
   },
-  buttonText: { color: '#F3F9FF', fontSize: 14 },
+  buttonText: { color: AuthColors.signInButtonText, fontFamily: FontFamily.regular, fontSize: 14 },
   signUp: { marginTop: 6 },
-  link: { color: AUTH_PRIMARY, fontSize: 14 },
-  centered: { textAlign: 'center', fontSize: 14, color: AUTH_PRIMARY },
+  link: { color: AuthColors.primary, fontFamily: FontFamily.regular, fontSize: 14 },
+  centered: { textAlign: 'center', fontFamily: FontFamily.regular, fontSize: 14, color: AuthColors.primary },
 });

@@ -2,9 +2,7 @@ import type { ReactNode } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native';
 
-import { Spacing } from '@/constants/theme';
-
-export const AUTH_PRIMARY = '#054A91';
+import { AuthColors, FontFamily, Spacing } from '@/constants/theme';
 
 type AuthSheetProps = {
   heading: string;
@@ -42,7 +40,7 @@ export function AuthSheet({
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: AUTH_PRIMARY },
+  container: { flex: 1, backgroundColor: AuthColors.primary },
   hero: {
     flex: 1,
     justifyContent: 'flex-end',
@@ -50,13 +48,13 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.eight,
   },
   wordmark: {
-    color: '#ffffff',
+    color: AuthColors.wordmark,
     fontSize: 40,
-    fontWeight: '700',
+    fontFamily: FontFamily.bold,
     letterSpacing: -1,
   },
   sheet: {
-    backgroundColor: '#ffffff',
+    backgroundColor: AuthColors.sheet,
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
     overflow: 'hidden',
@@ -68,8 +66,8 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
   },
   heading: {
-    color: AUTH_PRIMARY,
-    fontWeight: '600',
+    color: AuthColors.primary,
+    fontFamily: FontFamily.semiBold,
     marginBottom: Spacing.two,
   },
 });
