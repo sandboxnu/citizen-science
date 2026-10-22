@@ -2,11 +2,7 @@ import { Link } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { Spacing } from '@/constants/theme';
-
-const PRIMARY = '#054A91';
-const PRIMARY_LIGHT = '#BBDEFF';
-const NAVY = '#043567';
+import { AuthColors, FontFamily, Spacing } from '@/constants/theme';
 
 export default function LandingScreen() {
   return (
@@ -39,7 +35,7 @@ export default function LandingScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: PRIMARY },
+  container: { flex: 1, backgroundColor: AuthColors.primary },
   hero: {
     flex: 0.55,
     justifyContent: 'flex-end',
@@ -47,14 +43,14 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.eight,
   },
   wordmark: {
-    color: '#ffffff',
+    color: AuthColors.wordmark,
     fontSize: 40,
-    fontWeight: '700',
+    fontFamily: FontFamily.bold,
     letterSpacing: -1,
   },
   sheet: {
     flex: 0.45,
-    backgroundColor: '#ffffff',
+    backgroundColor: AuthColors.sheet,
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
     paddingTop: Spacing.nine,
@@ -63,9 +59,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   welcome: {
-    color: NAVY,
+    color: AuthColors.heading,
     fontSize: 24,
-    fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
     textAlign: 'center',
   },
   buttons: { gap: Spacing.seven },
@@ -74,9 +70,9 @@ const styles = StyleSheet.create({
     borderRadius: Spacing.two,
     alignItems: 'center',
   },
-  buttonText: { fontSize: 16 },
-  primaryButton: { backgroundColor: PRIMARY },
-  primaryButtonText: { color: '#ffffff', fontSize: 14 },
-  secondaryButton: { backgroundColor: PRIMARY_LIGHT },
-  secondaryButtonText: { color: NAVY, fontSize: 14 },
+  buttonText: { fontFamily: FontFamily.regular, fontSize: 16 },
+  primaryButton: { backgroundColor: AuthColors.primary },
+  primaryButtonText: { color: AuthColors.onPrimary, fontFamily: FontFamily.regular, fontSize: 14 },
+  secondaryButton: { backgroundColor: AuthColors.secondary },
+  secondaryButtonText: { color: AuthColors.onSecondary, fontFamily: FontFamily.regular, fontSize: 14 },
 });
