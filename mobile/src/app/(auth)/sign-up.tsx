@@ -1,17 +1,16 @@
 import { createUserWithEmailAndPassword } from '@react-native-firebase/auth';
-import { doc, serverTimestamp, setDoc } from '@react-native-firebase/firestore';
+import { doc, getDoc, serverTimestamp, writeBatch } from '@react-native-firebase/firestore';
 import { Link } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, TextInput } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
+import { AUTH_PRIMARY, AuthSheet } from '@/components/auth/auth-sheet';
+import { FormField, PasswordField, UsernameField } from '@/components/auth/form-field';
 import { Spacing } from '@/constants/theme';
 import { auth, firestore } from '@/lib/firebase';
 
-// Placeholder UI — real design pending Figma. Logic (Firebase Auth sign-up +
-// Firestore profile creation) is functional. "Signup with Google" is UI-only (separate ticket).
+type FieldErrors = Partial<Record<'firstName' | 'email' | 'username' | 'password', string>>;
+
 export default function SignUpScreen() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -19,130 +18,139 @@ export default function SignUpScreen() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+
+  function clearFieldError(field: keyof FieldErrors) {
+    setFieldErrors((prev) => ({ ...prev, [field]: undefined }));
+  }
 
   async function handleSignUp() {
     setError(null);
+    const usernameKey = username.trim().toLowerCase();
+    const nextErrors: FieldErrors = {
+      firstName: firstName.trim() === '' ? 'Name is required.' : undefined,
+      email: email.trim() === '' ? 'Email is required.' : undefined,
+      username:
+        usernameKey === ''
+          ? 'Username is required.'
+          : /[@/]/.test(usernameKey) || usernameKey.startsWith('.')
+            ? "Username can't contain @ or /, or start with a period."
+            : undefined,
+      password: password === '' ? 'Password is required.' : undefined,
+    };
+    setFieldErrors(nextErrors);
+    if (Object.values(nextErrors).some(Boolean)) {
+      return;
+    }
+
     try {
+      const usernameRef = doc(firestore, 'usernames', usernameKey);
+      if ((await getDoc(usernameRef)).exists()) {
+        setFieldErrors({ username: 'That username is taken.' });
+        return;
+      }
+
       const credential = await createUserWithEmailAndPassword(auth, email, password);
-      await setDoc(doc(firestore, 'users', credential.user.uid), {
+      const batch = writeBatch(firestore);
+      batch.set(doc(firestore, 'users', credential.user.uid), {
         email: credential.user.email,
         firstName,
         ...(lastName !== '' && { lastName }),
         username,
         createdAt: serverTimestamp(),
       });
+      batch.set(usernameRef, { uid: credential.user.uid, email: credential.user.email });
+      await batch.commit();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Sign up failed');
     }
   }
 
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedText type="title" style={styles.title}>
-          Sign Up
-        </ThemedText>
-
-        <TextInput
-          style={styles.input}
-          placeholder="First name"
+    <AuthSheet heading="Create your account">
+      <View style={styles.row}>
+        <FormField
+          style={styles.rowItem}
+          label="First name"
+          required
+          placeholder="Enter first name"
           value={firstName}
-          onChangeText={setFirstName}
+          error={fieldErrors.firstName}
+          onChangeText={(text) => {
+            setFirstName(text);
+            clearFieldError('firstName');
+          }}
         />
-        <TextInput
-          style={styles.input}
-          placeholder="Last name (optional)"
+        <FormField
+          style={styles.rowItem}
+          label="Last name"
+          placeholder="Enter last name"
           value={lastName}
           onChangeText={setLastName}
         />
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          autoCapitalize="none"
-          keyboardType="email-address"
-          value={email}
-          onChangeText={setEmail}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Username"
-          autoCapitalize="none"
-          value={username}
-          onChangeText={setUsername}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
+      </View>
+      <FormField
+        label="Email"
+        required
+        placeholder="Enter a email"
+        autoCapitalize="none"
+        keyboardType="email-address"
+        value={email}
+        error={fieldErrors.email}
+        onChangeText={(text) => {
+          setEmail(text);
+          clearFieldError('email');
+        }}
+      />
+      <UsernameField
+        required
+        placeholder="Enter a username"
+        value={username}
+        error={fieldErrors.username}
+        onChangeText={(text) => {
+          setUsername(text);
+          clearFieldError('username');
+        }}
+      />
+      <PasswordField
+        required
+        placeholder="Enter a password"
+        autoComplete="new-password"
+        textContentType="newPassword"
+        value={password}
+        error={fieldErrors.password}
+        onChangeText={(text) => {
+          setPassword(text);
+          clearFieldError('password');
+        }}
+      />
 
-        {error && (
-          <ThemedText type="small" style={styles.error}>
-            {error}
-          </ThemedText>
-        )}
+      {error && <Text style={styles.error}>{error}</Text>}
 
-        <Pressable onPress={handleSignUp}>
-          <ThemedView type="backgroundElement" style={styles.button}>
-            <ThemedText type="link">Sign Up</ThemedText>
-          </ThemedView>
+      <Pressable style={styles.button} onPress={handleSignUp}>
+        <Text style={styles.buttonText}>Signup</Text>
+      </Pressable>
+
+      <Link href="/(auth)/sign-in" asChild>
+        <Pressable>
+          <Text style={styles.link}>Already have an account? Login</Text>
         </Pressable>
-
-        <ThemedView style={styles.dividerRow}>
-          <ThemedView type="backgroundElement" style={styles.dividerLine} />
-          <ThemedText type="small" themeColor="textSecondary">
-            or
-          </ThemedText>
-          <ThemedView type="backgroundElement" style={styles.dividerLine} />
-        </ThemedView>
-
-        <Pressable disabled>
-          <ThemedView type="backgroundElement" style={styles.button}>
-            <ThemedText type="link">Signup with Google</ThemedText>
-          </ThemedView>
-        </Pressable>
-
-        <Link href="/(auth)/sign-in" asChild>
-          <Pressable>
-            <ThemedText type="linkPrimary">Already have an account? Login</ThemedText>
-          </Pressable>
-        </Link>
-      </SafeAreaView>
-    </ThemedView>
+      </Link>
+    </AuthSheet>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  safeArea: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.three,
-  },
-  title: { textAlign: 'center' },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: Spacing.two,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
-  },
+  row: { flexDirection: 'row', gap: Spacing.three },
+  rowItem: { flex: 1, fontSize: 14 },
+  error: { color: '#d33', fontSize: 14 },
   button: {
-    paddingVertical: Spacing.two,
+    backgroundColor: AUTH_PRIMARY,
+    paddingVertical: Spacing.ten,
     borderRadius: Spacing.two,
     alignItems: 'center',
+    marginTop: Spacing.four,
   },
-  dividerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.two,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-  },
-  error: { color: '#d33' },
+  buttonText: { color: '#ffffff', fontSize: 14 },
+  link: { color: AUTH_PRIMARY, fontSize: 14, textAlign: 'center' },
 });

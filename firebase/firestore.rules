@@ -3,9 +3,16 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Hazard zones are written only by the server (Cloud Functions).
-    // Any client can read them to display flood alerts on the map.
+    // Predicted flood boundaries from the client's data. Written only by the
+    // server. Any client can read them to display on the map.
     match /hazard_zones/{zoneId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Active NWS flood alerts, written only by pollNWSAlerts. Any client can
+    // read them to display on the map.
+    match /nws_alerts/{alertId} {
       allow read: if true;
       allow write: if false;
     }
@@ -44,6 +51,22 @@ service cloud.firestore {
         && request.resource.data.email is string && request.resource.data.email.size() <= 320;
 
       allow delete: if false;
+    }
+
+    // Username -> email lookup so signed-out users can sign in by username.
+    // Doc ID is the lowercased username. Anyone can get one doc by exact
+    // username, but nobody can list them. Existing docs can't be overwritten,
+    // which also keeps usernames unique.
+    match /usernames/{username} {
+      allow get: if true;
+      allow list: if false;
+
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasOnly(['uid', 'email'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.email == request.auth.token.email;
+
+      allow update, delete: if false;
     }
 
     // Reports are created by authenticated users for themselves and are

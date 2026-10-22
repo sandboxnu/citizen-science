@@ -24,6 +24,15 @@ export const Colors = {
   },
 } as const;
 
+// Bottom nav bar palette from the SIGHTLINE Figma handoff.
+export const NavBarColors = {
+  background: '#FFFFFF',
+  border: '#E0E1E6',
+  foreground: '#054A91',
+  selected: '#DCEBFB',
+  action: '#BFDCF7',
+} as const;
+
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
 
 export const Fonts = Platform.select({
@@ -59,7 +68,10 @@ export const Spacing = {
   four: 24,
   five: 32,
   six: 64,
+  seven: 12,
+  eight: 80,
+  nine: 45,
+  ten: 10
 } as const;
 
-export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
 export const MaxContentWidth = 800;
