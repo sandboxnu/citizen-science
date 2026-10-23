@@ -2,6 +2,7 @@ import * as admin from "firebase-admin";
 import * as path from "path";
 import * as fs from "fs";
 import { assertEmulatorRunning } from "./emulator";
+import { generateUsAlerts } from "./mock-us-alerts";
 
 // Points to local emulator — do not change
 process.env.FIRESTORE_EMULATOR_HOST = "127.0.0.1:8080";
@@ -49,18 +50,28 @@ function shiftToNow(properties: NWSFeature["properties"]) {
 async function seed() {
   await assertEmulatorRunning();
 
-  const batch = db.batch();
+  // The generated US-wide alerts are already timed relative to now.
+  const alerts = [
+    ...features.map(({ geometry, properties }) => ({ geometry, properties: shiftToNow(properties) })),
+    ...generateUsAlerts(),
+  ];
 
-  for (const { geometry, properties } of features) {
-    batch.set(db.collection("nws_alerts").doc(properties.id), {
-      ...shiftToNow(properties),
-      geometry: geometry ? JSON.stringify(geometry) : null,
-      ingestedAt: admin.firestore.FieldValue.serverTimestamp(),
-    });
+  // Clear the old mock alerts first so shapes removed from the generator don't linger.
+  await db.recursiveDelete(db.collection("nws_alerts"));
+
+  // A batch holds at most 500 writes.
+  for (let i = 0; i < alerts.length; i += 500) {
+    const batch = db.batch();
+    for (const { geometry, properties } of alerts.slice(i, i + 500)) {
+      batch.set(db.collection("nws_alerts").doc(String(properties.id)), {
+        ...properties,
+        geometry: geometry ? JSON.stringify(geometry) : null,
+        ingestedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+    }
+    await batch.commit();
   }
-
-  await batch.commit();
-  console.log(`Seeded ${features.length} mock NWS alerts into nws_alerts.`);
+  console.log(`Seeded ${alerts.length} mock NWS alerts into nws_alerts.`);
 }
 
 seed().catch(console.error);
