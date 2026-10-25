@@ -41,7 +41,7 @@ export type SubmitPostDisasterReportInput = {
 
 export async function submitPostDisasterReport(
   input: SubmitPostDisasterReportInput
-): Promise<void> {
+): Promise<string> {
     const currentUser = auth.currentUser;
 
     if (!currentUser) {
@@ -54,23 +54,23 @@ export async function submitPostDisasterReport(
     if (Number.isNaN(observedAt.getTime())) {
       throw new Error(`Invalid observedAt: ${input.observedAt}`);
     }
-
-    await addDoc(collection(firestore, 'reports'), {
+    const ref = await addDoc(collection(firestore, 'reports'), {
     userId: input.userId,
     disasterType: input.disasterType,
     location: new GeoPoint(input.latitude, input.longitude),
     observedAt: Timestamp.fromDate(observedAt),
     concerns: input.concerns.map((c) => ({
         type: c.type,
-         ...(c.type === "other" && { otherDescription: c.otherDescription }),
-        damageRating: c.damageRating, 
-        description: c.description, 
+        ...(c.type === "other" && { otherDescription: c.otherDescription }),
+        damageRating: c.damageRating,
+        ...(c.description !== undefined && { description: c.description }),
         photoUrls: c.photoUrls.map((p) => ({
       url: p.url,
       location: new GeoPoint(p.latitude, p.longitude)
       }))
     }))
   })
+  return ref.id;
 }
 
 

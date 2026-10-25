@@ -71,18 +71,31 @@ service cloud.firestore {
 
     // Reports are created by authenticated users for themselves and are
     // immutable afterward. Field set + types are validated to match
-    // mobile/src/lib/reports.ts's submitDuringDisasterReport() payload.
+    // mobile/src/lib/reports.ts's submitDuringDisasterReport() and
+    // submitPostDisasterReport() payloads.
     match /reports/{reportId} {
+      function isDuringDisasterReport(data) {
+        return data.keys().hasOnly(['userId', 'disasterType', 'location', 'observedAt', 'photos', 'description'])
+          && data.keys().hasAll(['userId', 'disasterType', 'location', 'observedAt', 'photos'])
+          && data.photos is list && data.photos.size() <= 20
+          && (!('description' in data)
+              || (data.description is string && data.description.size() <= 2000));
+      }
+
+      // Rules can't iterate lists, so individual concerns aren't validated.
+      function isPostDisasterReport(data) {
+        return data.keys().hasOnly(['userId', 'disasterType', 'location', 'observedAt', 'concerns'])
+          && data.keys().hasAll(['userId', 'disasterType', 'location', 'observedAt', 'concerns'])
+          && data.concerns is list && data.concerns.size() > 0 && data.concerns.size() <= 20;
+      }
+
       allow create: if request.auth != null
         && request.resource.data.userId == request.auth.uid
-        && request.resource.data.keys().hasOnly(['userId', 'disasterType', 'location', 'observedAt', 'photos', 'description'])
-        && request.resource.data.keys().hasAll(['userId', 'disasterType', 'location', 'observedAt', 'photos'])
         && request.resource.data.disasterType in ['flooding', 'earthquake', 'forest_fire']
         && request.resource.data.location is latlng
         && request.resource.data.observedAt is timestamp
-        && request.resource.data.photos is list && request.resource.data.photos.size() <= 20
-        && (!('description' in request.resource.data)
-            || (request.resource.data.description is string && request.resource.data.description.size() <= 2000));
+        && (isDuringDisasterReport(request.resource.data)
+            || isPostDisasterReport(request.resource.data));
       allow read: if request.auth != null
         && resource.data.userId == request.auth.uid;
       allow update, delete: if false;
