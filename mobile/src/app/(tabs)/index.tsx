@@ -12,7 +12,8 @@ import { useAuth } from '@/lib/auth-context';
 import { auth } from '@/lib/firebase';
 import { subscribeToNwsAlerts, type NwsAlert } from '@/lib/nws-alerts';
 
-const MOCK_USER_LOCATION = { latitude: 36.2, longitude: -81.7 };
+// Richards Hall, Northeastern University.
+const MOCK_USER_LOCATION = { latitude: 42.3399, longitude: -71.0889 };
 const MOCK_LOCATION_ACCURACY_METERS = 30;
 
 const DEFAULT_REGION = {
