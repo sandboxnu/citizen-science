@@ -125,7 +125,7 @@ function createRandom(seed: number) {
 const random = createRandom(20261022);
 const between = (min: number, max: number) => min + random() * (max - min);
 const pick = <T>(items: T[]): T => items[Math.floor(random() * items.length)];
-const round = (n: number) => Math.round(n * 10000) / 10000;
+const round = (n: number) => Math.round(n * 100000) / 100000;
 
 // Offsets in degrees are scaled so shapes don't look squashed at high latitudes.
 function offset(lon: number, lat: number, dx: number, dy: number): Position {
@@ -333,6 +333,92 @@ function arealFloodWarning(place: Place, now: number, index: number): MockFeatur
 
 const slug = (place: Place) => `${place.city}-${place.state}`.toLowerCase().replace(/[^a-z]+/g, "-");
 
+// The map's mock user location (Richards Hall) is here, so these show up as
+// soon as the map opens. They trace real low-lying areas around campus and are
+// kept apart from each other and from the spawn point.
+const NORTHEASTERN: Place = {
+  city: "Northeastern University", state: "MA", county: "Suffolk", river: "Muddy River", office: "Boston/Norton MA", lon: -71.0889, lat: 42.3399,
+};
+
+const withShape = (feature: MockFeature, ring: Position[]): MockFeature => ({
+  ...feature,
+  geometry: { type: "Polygon", coordinates: [ring] },
+});
+
+// Chaikin smoothing: rounds a polyline's corners into a curve.
+function smooth(path: Position[], iterations: number): Position[] {
+  let points = path;
+  for (let n = 0; n < iterations; n++) {
+    const next: Position[] = [points[0]];
+    for (let i = 0; i < points.length - 1; i++) {
+      const [x1, y1] = points[i];
+      const [x2, y2] = points[i + 1];
+      next.push([0.75 * x1 + 0.25 * x2, 0.75 * y1 + 0.25 * y2], [0.25 * x1 + 0.75 * x2, 0.25 * y1 + 0.75 * y2]);
+    }
+    next.push(points[points.length - 1]);
+    points = next;
+  }
+  return points;
+}
+
+// Floodplain along a river: a smoothed centerline buffered on each side by a
+// width that wobbles gently and independently, with rounded ends, so the edge
+// looks like it follows the terrain instead of being a clean band.
+function floodplain(path: Position[], halfWidth: number): Position[] {
+  const points = smooth(path, 4);
+
+  const edge = () => {
+    const waves = [2, 5, 9].map((k, i) => ({ k, amp: between(0.1, 0.25) / (i + 1), phase: between(0, Math.PI * 2) }));
+    return (t: number) => 1 + waves.reduce((sum, { k, amp, phase }) => sum + amp * Math.sin(k * t + phase), 0);
+  };
+  const leftWidth = edge();
+  const rightWidth = edge();
+
+  const left: Position[] = [];
+  const right: Position[] = [];
+  points.forEach(([lon, lat], i) => {
+    const [nextLon, nextLat] = points[Math.min(i + 1, points.length - 1)];
+    const [prevLon, prevLat] = points[Math.max(i - 1, 0)];
+    const cos = Math.cos((lat * Math.PI) / 180);
+    const dx = (nextLon - prevLon) * cos;
+    const dy = nextLat - prevLat;
+    const length = Math.hypot(dx, dy);
+    const t = i / (points.length - 1);
+    const taper = Math.sin(Math.PI * t) ** 0.5;
+    const nx = -dy / length;
+    const ny = dx / length;
+    const l = halfWidth * taper * leftWidth(t * Math.PI * 2);
+    const r = halfWidth * taper * rightWidth(t * Math.PI * 2);
+    left.push(offset(lon, lat, nx * l, ny * l));
+    right.push(offset(lon, lat, -nx * r, -ny * r));
+  });
+  return close([...left, ...right.reverse()]);
+}
+
+function campusAlerts(now: number): MockFeature[] {
+  const charles = { ...NORTHEASTERN, river: "Charles River" };
+  const stonyBrook = { ...NORTHEASTERN, river: "Stony Brook" };
+  return [
+    // Muddy River through the Back Bay Fens, ~600 m west of campus.
+    withShape(
+      floodWarning(NORTHEASTERN, now, 1),
+      floodplain([[-71.1065, 42.3335], [-71.1035, 42.3378], [-71.0995, 42.3405], [-71.0968, 42.3425], [-71.0952, 42.3445]], 0.0016)
+    ),
+    // Low ground along the Charles River Esplanade, ~1.3 km north.
+    withShape(
+      floodWarning(charles, now, 2),
+      floodplain([[-71.0955, 42.3508], [-71.0885, 42.3527], [-71.0815, 42.3546], [-71.0745, 42.3566]], 0.0011)
+    ),
+    // Stony Brook culvert near Jackson Square, ~1.5 km southwest.
+    withShape(
+      flashFloodWarning(stonyBrook, now, 1),
+      floodplain([[-71.1045, 42.3195], [-71.1012, 42.3243], [-71.0986, 42.3288]], 0.0013)
+    ),
+    // Poor drainage pocket off Columbus Ave by Ruggles, ~900 m southeast.
+    withShape(arealFloodWarning(NORTHEASTERN, now, 1), blob(-71.0800, 42.3348, 0.0018)),
+  ];
+}
+
 const count = (min: number, max: number) => min + Math.floor(random() * (max - min + 1));
 
 // Each place gets a handful of small shapes, plus a shapeless Flood Watch about half the time.
@@ -344,5 +430,7 @@ export function generateUsAlerts(now: number = Date.now()): MockFeature[] {
     for (let i = count(0, 3); i > 0; i--) features.push(flashFloodWarning(place, now, i));
     for (let i = count(0, 3); i > 0; i--) features.push(arealFloodWarning(place, now, i));
   }
+  // Generated last so the rest of the alerts keep the same shapes as before.
+  features.push(...campusAlerts(now));
   return features;
 }
