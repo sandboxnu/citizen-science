@@ -122,7 +122,8 @@ function createRandom(seed: number) {
   };
 }
 
-const random = createRandom(20261022);
+const SEED = 20261022;
+let random = createRandom(SEED);
 const between = (min: number, max: number) => min + random() * (max - min);
 const pick = <T>(items: T[]): T => items[Math.floor(random() * items.length)];
 const round = (n: number) => Math.round(n * 100000) / 100000;
@@ -421,16 +422,49 @@ function campusAlerts(now: number): MockFeature[] {
 
 const count = (min: number, max: number) => min + Math.floor(random() * (max - min + 1));
 
-// Each place gets a handful of small shapes, plus a shapeless Flood Watch about half the time.
+type Box = [number, number, number, number];
+
+function boundingBox(geometry: Geometry): Box {
+  const ring = geometry.coordinates[0];
+  const lons = ring.map(([lon]) => lon);
+  const lats = ring.map(([, lat]) => lat);
+  return [Math.min(...lons), Math.min(...lats), Math.max(...lons), Math.max(...lats)];
+}
+
+const overlaps = (a: Box, b: Box) => a[0] < b[2] && b[0] < a[2] && a[1] < b[3] && b[1] < a[3];
+
+// Each place gets a handful of small shapes, plus a shapeless Flood Watch about
+// half the time. No two shapes overlap: a shape that would is redrawn somewhere
+// else nearby, and dropped if it still doesn't fit.
 export function generateUsAlerts(now: number = Date.now()): MockFeature[] {
+  random = createRandom(SEED);
   const features: MockFeature[] = [];
-  for (const place of PLACES) {
-    if (random() < 0.5) features.push(floodWatch(place, now));
-    for (let i = count(1, 2); i > 0; i--) features.push(floodWarning(place, now, i));
-    for (let i = count(0, 3); i > 0; i--) features.push(flashFloodWarning(place, now, i));
-    for (let i = count(0, 3); i > 0; i--) features.push(arealFloodWarning(place, now, i));
+  const placed: Box[] = [];
+
+  const add = (feature: MockFeature) => {
+    if (!feature.geometry) {
+      features.push(feature);
+      return true;
+    }
+    const box = boundingBox(feature.geometry);
+    if (placed.some((other) => overlaps(box, other))) return false;
+    placed.push(box);
+    features.push(feature);
+    return true;
+  };
+  const place = (make: () => MockFeature) => {
+    for (let attempt = 0; attempt < 5; attempt++) {
+      if (add(make())) return;
+    }
+  };
+
+  // Campus first, since its shapes are hand-placed and must stay put.
+  campusAlerts(now).forEach(add);
+  for (const p of PLACES) {
+    if (random() < 0.5) add(floodWatch(p, now));
+    for (let i = count(1, 2); i > 0; i--) place(() => floodWarning(p, now, i));
+    for (let i = count(0, 3); i > 0; i--) place(() => flashFloodWarning(p, now, i));
+    for (let i = count(0, 3); i > 0; i--) place(() => arealFloodWarning(p, now, i));
   }
-  // Generated last so the rest of the alerts keep the same shapes as before.
-  features.push(...campusAlerts(now));
   return features;
 }
