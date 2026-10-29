@@ -1,14 +1,19 @@
 import { useEffect, useState } from 'react';
 import { signOut } from '@react-native-firebase/auth';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import MapView, { Circle, Marker, Polygon } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AlertSheet } from '@/components/alert-sheet';
+import { MapFilterBar } from '@/components/map-filter-bar';
+import {
+  DEFAULT_MAP_OVERLAY_FILTERS,
+  MapOverlaySheet,
+  type MapOverlayFilters,
+} from '@/components/map-overlay-sheet';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
-import { useAuth } from '@/lib/auth-context';
 import { auth } from '@/lib/firebase';
 import { subscribeToNwsAlerts, type NwsAlert } from '@/lib/nws-alerts';
 
@@ -23,10 +28,11 @@ const DEFAULT_REGION = {
 };
 
 export default function MapScreen() {
-  const { user } = useAuth();
   const [nwsAlerts, setNwsAlerts] = useState<NwsAlert[]>([]);
   const [error, setError] = useState(false);
   const [selectedAlert, setSelectedAlert] = useState<NwsAlert | null>(null);
+  const [overlayFilters, setOverlayFilters] = useState<MapOverlayFilters>(DEFAULT_MAP_OVERLAY_FILTERS);
+  const [overlaySheetOpen, setOverlaySheetOpen] = useState(false);
 
   useEffect(
     () =>
@@ -46,7 +52,7 @@ export default function MapScreen() {
         style={styles.map}
         initialRegion={DEFAULT_REGION}
       >
-        {nwsAlerts.flatMap((alert) =>
+        {(overlayFilters.flooding ? nwsAlerts : []).flatMap((alert) =>
           alert.polygons.map((polygon, i) => (
             <Polygon
               key={`${alert.id}-${i}`}
@@ -72,17 +78,29 @@ export default function MapScreen() {
         </Marker>
       </MapView>
 
-      <SafeAreaView style={styles.overlay} edges={['top']}>
-        <ThemedText type="small">Signed in as {user?.email}</ThemedText>
+      <SafeAreaView style={styles.overlay} edges={['top']} pointerEvents="box-none">
+        <MapFilterBar
+          filters={overlayFilters}
+          onOpenOverlay={() => setOverlaySheetOpen(true)}
+          onChange={setOverlayFilters}
+        />
         {error && (
           <ThemedText type="small" themeColor="textSecondary">
             Couldn&apos;t load flood alerts.
           </ThemedText>
         )}
-        
       </SafeAreaView>
 
       <AlertSheet alert={selectedAlert} onClose={() => setSelectedAlert(null)} />
+      <MapOverlaySheet
+        visible={overlaySheetOpen}
+        filters={overlayFilters}
+        onSave={(filters) => {
+          setOverlayFilters(filters);
+          setOverlaySheetOpen(false);
+        }}
+        onClose={() => setOverlaySheetOpen(false)}
+      />
     </ThemedView>
   );
 }
@@ -103,8 +121,8 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.two,
+    paddingHorizontal: Spacing.five,
+    paddingTop: Spacing.ten,
     gap: Spacing.two,
   },
 });

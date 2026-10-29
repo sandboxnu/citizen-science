@@ -48,6 +48,28 @@ export const AlertSheetColors = {
   lastUpdatedDot: '#2F6FDB',
 } as const;
 
+// Map overlay filter sheet palette from the SIGHTLINE Figma handoff.
+export const MapOverlayColors = {
+  background: '#FFFFFF',
+  title: '#000000',
+  text: '#271F16',
+  handle: '#BABABA',
+  backdrop: 'rgba(17,24,39,0.5)',
+  toggleOn: '#054A91',
+  toggleOff: '#BABABA',
+  toggleKnob: '#FEFFFF',
+  primary: '#054A91',
+  onPrimary: '#F3F9FF',
+  secondary: '#BBDEFF',
+  onSecondary: '#022D59',
+  searchBackground: '#FFFFFF',
+  searchPlaceholder: '#B9B9B9',
+  chipActive: '#0069D5',
+  chipActiveText: '#FEFFFF',
+  chipInactive: '#FEFFFF',
+  chipInactiveText: '#271F16',
+} as const;
+
 // Auth screens (landing, sign in, sign up) palette from the SIGHTLINE Figma handoff.
 export const AuthColors = {
   primary: '#054A91',
