@@ -70,6 +70,13 @@ export const MapOverlayColors = {
   chipInactiveText: '#271F16',
 } as const;
 
+// Start Report button
+export const StartReportColors = {
+  background: '#054A91',
+  text: '#FFFFFF',
+} as const;
+
+
 // Auth screens (landing, sign in, sign up) palette from the SIGHTLINE Figma handoff.
 export const AuthColors = {
   primary: '#054A91',

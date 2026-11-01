@@ -16,6 +16,7 @@ import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { auth } from '@/lib/firebase';
 import { subscribeToNwsAlerts, type NwsAlert } from '@/lib/nws-alerts';
+import { StartReport } from '@/components/start-report';
 
 // Richards Hall, Northeastern University.
 const MOCK_USER_LOCATION = { latitude: 42.3399, longitude: -71.0889 };
@@ -91,6 +92,8 @@ export default function MapScreen() {
         )}
       </SafeAreaView>
 
+      <StartReport onOpen={() => console.log('Start Report pressed')} />
+
       <AlertSheet alert={selectedAlert} onClose={() => setSelectedAlert(null)} />
       <MapOverlaySheet
         visible={overlaySheetOpen}
@@ -104,6 +107,7 @@ export default function MapScreen() {
     </ThemedView>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
