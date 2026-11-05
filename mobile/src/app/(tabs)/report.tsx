@@ -6,6 +6,7 @@ import { Linking, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, Vie
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { FontFamily, ReportColors, Spacing } from '@/constants/theme';
+import { isKnownConcernType, type KnownConcernType, toConcernType } from '@/lib/reports';
 
 type DisasterType = 'flooding';
 
@@ -22,66 +23,65 @@ const DISASTER_TYPES: {
 ];
 
 type EvidenceOption = {
-  value: string;
+  value: KnownConcernType;
   title: string;
   description: string;
   icon: ImageSource;
 };
 
-// Evidence the user typed in themselves is stored with this prefix so it can't collide with a built-in value.
-// When the report is submitted it maps to the `other` concern type, with the title as `otherDescription`.
+// Evidence the user typed in themselves is kept in state as `custom:<what they typed>`, so the card can show their
+// original text. 
 const CUSTOM_EVIDENCE_PREFIX = 'custom:';
 const MAX_CUSTOM_EVIDENCE_LENGTH = 100;
 
 const isCustomEvidence = (value: string) => value.startsWith(CUSTOM_EVIDENCE_PREFIX);
 
-// Evidence of damage the user can report, per disaster type.
 const EVIDENCE_OPTIONS: Record<DisasterType, EvidenceOption[]> = {
   flooding: [
     {
-      value: 'high-waterline',
+      value: 'high_waterline',
       title: 'High Waterline',
       description: 'Marks on walls or trees showing how high water rose.',
       icon: require('@/assets/images/reportIcons/waves.svg'),
     },
     {
-      value: 'standing-water',
+      value: 'standing_water',
       title: 'Standing Water',
       description: 'Water pooling in streets, yards, or fields that isn’t draining.',
       icon: require('@/assets/images/reportIcons/cloud-rain.svg'),
     },
     {
-      value: 'impassable-roadway',
+      value: 'impassable_roadway',
       title: 'Impassable Roadway',
       description: 'Roads blocked or unsafe to cross because of floodwater, mud, or debris.',
       icon: require('@/assets/images/reportIcons/cone.svg'),
     },
     {
-      value: 'building-water-damage',
+      value: 'building_water_damage',
       title: 'Building Water Damage',
       description: 'Water around or inside a building structure that has left damage behind.',
       icon: require('@/assets/images/reportIcons/building-complex.svg'),
     },
     {
-      value: 'infrastructure-damage',
+      value: 'infrastructure_damage',
       title: 'Infrastructure Damage',
       description: 'Roads, bridges, culverts, pipes, wells, or septic systems damaged or collapsed.',
       icon: require('@/assets/images/reportIcons/road.svg'),
     },
     {
-      value: 'crop-damage',
+      value: 'crop_damage',
       title: 'Crop Damage',
       description: 'Flooded fields, or plants and crops that are damaged or washed out.',
       icon: require('@/assets/images/reportIcons/sprout.svg'),
     },
     {
-      value: 'power-utility-damage',
+      value: 'power_utility_damage',
       title: 'Power or Utility Damage',
       description: 'Downed lines, flooded electrical equipment, or damaged utilities.',
       icon: require('@/assets/images/reportIcons/zap-off.svg'),
     },
     {
-      value: 'submerged-vehicle',
+      value: 'submerged_vehicle',
       title: 'Submerged Vehicle',
       description: 'Car partially or fully underwater or stranded.',
       icon: require('@/assets/images/reportIcons/car.svg'),
@@ -102,7 +102,6 @@ export default function ReportScreen() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const canContinue = disasterType !== null && evidence.length > 0;
-  // Show the options list until something is picked; after that, only while searching.
   const showEvidenceOptions = evidence.length === 0 || searchFocused;
   const selectedType = DISASTER_TYPES.find((type) => type.value === disasterType);
 
@@ -124,17 +123,15 @@ export default function ReportScreen() {
       })
     : [];
 
-  // Offer to add the search text as new evidence when nothing matches it.
   const trimmedQuery = evidenceQuery.trim().slice(0, MAX_CUSTOM_EVIDENCE_LENGTH);
-  const alreadySelected = selectedEvidence.some((e) => e.title.toLowerCase() === trimmedQuery.toLowerCase());
-  const canAddCustomEvidence = trimmedQuery !== '' && evidenceOptions.length === 0 && !alreadySelected;
+  const queryType = toConcernType(trimmedQuery);
+  const alreadySelected = selectedEvidence.some((e) => toConcernType(e.title) === queryType);
+  const canAddCustomEvidence = queryType !== '' && evidenceOptions.length === 0 && !alreadySelected;
 
   const handleSelectType = (type: DisasterType) => {
-    // Evidence depends on the disaster type, so selecting or unselecting clears it.
     setEvidence([]);
     setEvidenceQuery('');
 
-    // Tapping the selected tile again unselects it and returns to the initial state.
     const unselecting = type === disasterType;
     setDisasterType(unselecting ? null : type);
     setTypeExpanded(unselecting);
@@ -142,13 +139,13 @@ export default function ReportScreen() {
 
   const toggleEvidence = (value: string) => {
     setEvidence((current) => (current.includes(value) ? current.filter((v) => v !== value) : [...current, value]));
-    // Picking an option closes the search so the list collapses.
     setEvidenceQuery('');
     searchInputRef.current?.blur();
   };
 
   const addCustomEvidence = () => {
-    setEvidence((current) => [...current, `${CUSTOM_EVIDENCE_PREFIX}${trimmedQuery}`]);
+    const value = isKnownConcernType(queryType) ? queryType : `${CUSTOM_EVIDENCE_PREFIX}${trimmedQuery}`;
+    setEvidence((current) => (current.includes(value) ? current : [...current, value]));
     setEvidenceQuery('');
     searchInputRef.current?.blur();
   };
@@ -159,7 +156,6 @@ export default function ReportScreen() {
 
   const hasProgress = disasterType !== null || evidence.length > 0;
 
-  // Confirm before throwing away a report the user has started.
   const handleCancel = () => {
     if (hasProgress) setShowDeleteModal(true);
   };
