@@ -14,7 +14,6 @@ export type SubmitDuringDisasterReportInput = {
 };
 
 
-// Built-in concern types. These are the only ones offered in pickers; anything else is user-entered.
 export const KNOWN_CONCERN_TYPES = [
   "high_waterline",
   "standing_water",
@@ -28,14 +27,12 @@ export const KNOWN_CONCERN_TYPES = [
 
 export type KnownConcernType = (typeof KNOWN_CONCERN_TYPES)[number];
 
-// A known type, or a user-entered one stored as-is (normalized with toConcernType).
-// `string & {}` accepts any string while keeping autocomplete for the known values.
 export type ConcernType = KnownConcernType | (string & {});
 
 export const isKnownConcernType = (type: string): type is KnownConcernType =>
   (KNOWN_CONCERN_TYPES as readonly string[]).includes(type);
 
-// Turns user-entered text into a concern type, e.g. "Sink Hole" -> "sink_hole".
+// Turns user-entered text into a concern type.
 export const toConcernType = (text: string): ConcernType =>
   text
     .trim()
