@@ -462,7 +462,7 @@ function EvidenceRow({ option, selected, showDivider, onPress }: EvidenceRowProp
       accessibilityLabel={`${option.title}. ${option.description}`}
       accessibilityState={{ checked: selected }}>
       <View style={styles.evidenceText}>
-        <Text style={[styles.evidenceTitle, selected && styles.evidenceTitleSelected]}>{option.title}</Text>
+        <Text style={styles.evidenceTitle}>{option.title}</Text>
         <Text style={styles.evidenceDescription}>{option.description}</Text>
       </View>
       <Image
@@ -688,9 +688,8 @@ const styles = StyleSheet.create({
   evidenceTitle: {
     fontFamily: FontFamily.regular,
     fontSize: 14,
-    color: ReportColors.text,
+    color: ReportColors.tileSelectedText,
   },
-  evidenceTitleSelected: { color: ReportColors.tileSelectedText },
   evidenceDescription: {
     fontFamily: FontFamily.regular,
     fontSize: 14,
