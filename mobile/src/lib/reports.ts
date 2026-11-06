@@ -14,17 +14,34 @@ export type SubmitDuringDisasterReportInput = {
 };
 
 
-export type ConcernType =
-  | "water_damage"
-  | "air_quality"
-  | "structural_damage"
-  | "road_damage"
-  | "power_outage"
-  | "other";
+export const KNOWN_CONCERN_TYPES = [
+  "high_waterline",
+  "standing_water",
+  "impassable_roadway",
+  "building_water_damage",
+  "infrastructure_damage",
+  "crop_damage",
+  "power_utility_damage",
+  "submerged_vehicle",
+] as const;
+
+export type KnownConcernType = (typeof KNOWN_CONCERN_TYPES)[number];
+
+export type ConcernType = KnownConcernType | (string & {});
+
+export const isKnownConcernType = (type: string): type is KnownConcernType =>
+  (KNOWN_CONCERN_TYPES as readonly string[]).includes(type);
+
+// Turns user-entered text into a concern type.
+export const toConcernType = (text: string): ConcernType =>
+  text
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
 
 export type Concern = {
   type: ConcernType;
-  otherDescription?: string; // required if type === "other"
   damageRating: number; // required, 1-5
   description?: string; // optional
   photoUrls: { url: string; latitude: number; longitude: number }[]; // already-uploaded Storage URLs and locations, multiple per concern
@@ -61,7 +78,6 @@ export async function submitPostDisasterReport(
     observedAt: Timestamp.fromDate(observedAt),
     concerns: input.concerns.map((c) => ({
         type: c.type,
-        ...(c.type === "other" && { otherDescription: c.otherDescription }),
         damageRating: c.damageRating,
         ...(c.description !== undefined && { description: c.description }),
         photoUrls: c.photoUrls.map((p) => ({

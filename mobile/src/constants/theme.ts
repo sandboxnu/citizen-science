@@ -112,6 +112,33 @@ export const ProfileColors = {
   dialogMessageText: '#271F16'
 } as const;
 
+// Disaster evidence report form palette from the SIGHTLINE Figma handoff.
+export const ReportColors = {
+  background: '#FFFFFF',
+  title: '#054A91', 
+  text: '#4B443B',
+  required: '#E75A0E',
+  warningText: '#E75A0E',
+  warningBackground: '#FEFFFF',
+  warningBorder: '#FFC9AD',
+  cardBorder: '#EEEEEE',
+  chevron: '#86827D',
+  tileBorder: '#B9B9B9',
+  tileIcon: '#271F16',
+  tileText: '#86827D',
+  tileSelectedBorder: '#B9B9B9',
+  tileSelectedBackground: '#DEEFFE',
+  tileSelectedText: '#86827D', 
+  cancelText: '#86827D',
+  primary: '#054A91',
+  onPrimary: '#F3F9FF',
+  disabled: '#BDBDBD',
+  onDisabled: '#FFFFFF',
+  destructive: '#E0672A',
+  modalText: '#000000',
+  overlay: 'rgba(0, 0, 0, 0.45)',
+} as const;
+
 // Severity chip colors, keyed by NWS `severity`.
 export const SeverityColors: Record<string, { background: string; text: string }> = {
   Extreme: { background: '#B3261E', text: '#FFFFFF' },
