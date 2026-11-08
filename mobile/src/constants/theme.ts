@@ -76,6 +76,23 @@ export const StartReportColors = {
   text: '#FFFFFF',
 } as const;
 
+// Recenter (my location) map button
+export const RecenterButtonColors = {
+  background: '#FEFFFF',
+  activeBackground: '#0069D5',
+  shadow: 'rgba(0,0,0,0.25)',
+} as const;
+
+// User location dot + accuracy radius from the SIGHTLINE Figma handoff ("User Location").
+// Figma draws the halo as a #358FEC radial gradient (100% -> 45% alpha) at 50% layer opacity;
+// map circles can't take gradients, so the fill is the area-weighted average of that gradient.
+export const UserLocationColors = {
+  dot: '#054A91',
+  dotBorder: '#FEFFFF',
+  radiusFill: 'rgba(53,143,236,0.32)',
+  radiusStroke: 'rgba(0,105,213,0.5)',
+} as const;
+
 
 // Auth screens (landing, sign in, sign up) palette from the SIGHTLINE Figma handoff.
 export const AuthColors = {
