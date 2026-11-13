@@ -1,4 +1,4 @@
-import { Redirect } from 'expo-router';
+import { Redirect, usePathname } from 'expo-router';
 import { TabList, TabSlot, TabTrigger, Tabs } from 'expo-router/ui';
 import { StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -10,6 +10,9 @@ import { useAuth } from '@/lib/auth-context';
 export default function TabsLayout() {
   const { user, initializing } = useAuth();
   const insets = useSafeAreaInsets();
+  const pathname = usePathname();
+  // The report flow is full-screen and has its own close button.
+  const hideTabBar = pathname === '/report';
 
   if (initializing) {
     return null;
@@ -22,7 +25,7 @@ export default function TabsLayout() {
   return (
     <Tabs style={styles.container}>
       <TabSlot />
-      <TabList style={[styles.bar, { paddingBottom: insets.bottom + Spacing.two }]}>
+      <TabList style={[styles.bar, { paddingBottom: insets.bottom + Spacing.two }, hideTabBar && styles.hidden]}>
         <TabTrigger name="index" href="/" asChild>
           <TabBarButton label="Map" icon={require('@/assets/images/navIcons/map.svg')} />
         </TabTrigger>
@@ -45,6 +48,7 @@ export default function TabsLayout() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  hidden: { display: 'none' },
   bar: {
     flexDirection: 'row',
     alignItems: 'center',

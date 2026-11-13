@@ -2,11 +2,25 @@ import { Image, type ImageSource } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { type ComponentRef, useMemo, useRef, useState } from 'react';
-import { Linking, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Linking, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import {
+  emptyEvidenceDetails,
+  type EvidenceDetails,
+  EvidenceDetailsStep,
+} from '@/components/report/evidence-details-step';
+import { CloseReportButton } from '@/components/report/close-report-button';
+import { ReportSuccess } from '@/components/report/report-success';
 import { FontFamily, ReportColors, Spacing } from '@/constants/theme';
-import { isKnownConcernType, type KnownConcernType, toConcernType } from '@/lib/reports';
+import { useAuth } from '@/lib/auth-context';
+import {
+  isKnownConcernType,
+  type KnownConcernType,
+  submitPostDisasterReport,
+  toConcernType,
+  uploadReportPhoto,
+} from '@/lib/reports';
 
 type DisasterType = 'flooding';
 
@@ -30,7 +44,7 @@ type EvidenceOption = {
 };
 
 // Evidence the user typed in themselves is kept in state as `custom:<what they typed>`, so the card can show their
-// original text. 
+// original text.
 const CUSTOM_EVIDENCE_PREFIX = 'custom:';
 const MAX_CUSTOM_EVIDENCE_LENGTH = 100;
 
@@ -101,6 +115,13 @@ export default function ReportScreen() {
   const searchInputRef = useRef<ComponentRef<typeof TextInput>>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
+  // null while choosing evidence; otherwise the index into `selectedEvidence` being filled in.
+  const [detailsIndex, setDetailsIndex] = useState<number | null>(null);
+  const [details, setDetails] = useState<Record<string, EvidenceDetails>>({});
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const { user } = useAuth();
+
   const canContinue = disasterType !== null && evidence.length > 0;
   const showEvidenceOptions = evidence.length === 0 || searchFocused;
   const selectedType = DISASTER_TYPES.find((type) => type.value === disasterType);
@@ -160,20 +181,147 @@ export default function ReportScreen() {
     if (hasProgress) setShowDeleteModal(true);
   };
 
+  // The X always leaves the report flow, asking first if there's anything to lose.
+  const handleClose = () => {
+    if (hasProgress) setShowDeleteModal(true);
+    else router.navigate('/');
+  };
+
   const handleDeleteReport = () => {
     setShowDeleteModal(false);
+    resetReport();
+    router.navigate('/');
+  };
+
+  const resetReport = () => {
     setDisasterType(null);
     setTypeExpanded(true);
     setEvidence([]);
     setEvidenceQuery('');
-    router.navigate('/');
+    setDetails({});
+    setDetailsIndex(null);
   };
 
+  const handleSubmit = async () => {
+    if (!user || !disasterType) {
+      Alert.alert('Sign in required', 'You need to be signed in to submit a report.');
+      return;
+    }
+    const items = selectedEvidence.map((e) => ({
+      ...e,
+      details: details[e.value],
+    }));
+    const first = items[0]?.details;
+    if (!first?.location || !first.observedAt) return;
+
+    setSubmitting(true);
+    try {
+      // The same photo can be reused across evidence ("Previous uploads"), so upload each one once.
+      const uploads = new Map<string, Promise<string>>();
+      const upload = (uri: string) => {
+        if (!uploads.has(uri)) uploads.set(uri, uploadReportPhoto(user.uid, uri));
+        return uploads.get(uri)!;
+      };
+
+      const concerns = await Promise.all(
+        items.map(async ({ value, title, details: d }) => ({
+          type: isCustomEvidence(value) ? toConcernType(title) : value,
+          damageRating: d.damageRating,
+          ...(d.description.trim() && { description: d.description.trim() }),
+          photoUrls: await Promise.all(
+            d.photos.map(async (p) => ({
+              url: await upload(p.uri),
+              latitude: p.latitude,
+              longitude: p.longitude,
+            })),
+          ),
+        })),
+      );
+
+      // The report schema has one location/time, so use the first evidence item's.
+      await submitPostDisasterReport({
+        userId: user.uid,
+        disasterType,
+        latitude: first.location.latitude,
+        longitude: first.location.longitude,
+        observedAt: first.observedAt.toISOString(),
+        concerns,
+      });
+      setSubmitted(true);
+    } catch (err) {
+      console.error('Failed to submit report', err);
+      Alert.alert('Couldn’t submit report', 'Something went wrong. Check your connection and try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const deleteModal = (
+    <DeleteReportModal
+      visible={showDeleteModal}
+      onClose={() => setShowDeleteModal(false)}
+      onDelete={handleDeleteReport}
+    />
+  );
+
+  if (submitted) {
+    return (
+      <ReportSuccess
+        onDone={() => {
+          setSubmitted(false);
+          resetReport();
+          router.navigate('/');
+        }}
+      />
+    );
+  }
+
+  const currentEvidence = detailsIndex !== null ? selectedEvidence[detailsIndex] : undefined;
+  if (currentEvidence && detailsIndex !== null) {
+    const isLast = detailsIndex === selectedEvidence.length - 1;
+    const previousPhotos = selectedEvidence
+      .filter((e) => e.value !== currentEvidence.value)
+      .flatMap((e) => details[e.value]?.photos ?? [])
+      .filter((photo, i, all) => all.findIndex((p) => p.uri === photo.uri) === i);
+    return (
+      <>
+        <EvidenceDetailsStep
+          key={currentEvidence.value}
+          title={currentEvidence.title}
+          disasterLabel={selectedType?.label ?? ''}
+          step={detailsIndex + 1}
+          totalSteps={selectedEvidence.length}
+          details={details[currentEvidence.value] ?? emptyEvidenceDetails()}
+          previousPhotos={previousPhotos}
+          submitting={submitting}
+          onChange={(next) =>
+            setDetails((current) => ({
+              ...current,
+              [currentEvidence.value]: next,
+            }))
+          }
+          onBack={() => setDetailsIndex(detailsIndex === 0 ? null : detailsIndex - 1)}
+          onNext={() => {
+            if (isLast) handleSubmit();
+            else setDetailsIndex(detailsIndex + 1);
+          }}
+          onClose={handleClose}
+        />
+        {deleteModal}
+      </>
+    );
+  }
+
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.header}>
-          <Text style={styles.title}>Disaster Evidence Report</Text>
+          <View style={styles.titleRow}>
+            <Text style={styles.title} accessibilityRole="header">
+              Disaster Evidence Report
+            </Text>
+            <CloseReportButton onPress={handleClose} />
+          </View>
           <Text style={styles.requiredNote}>*Required</Text>
         </View>
 
@@ -317,6 +465,7 @@ export default function ReportScreen() {
         </Pressable>
         <Pressable
           style={[styles.button, canContinue ? styles.nextButton : styles.nextButtonDisabled]}
+          onPress={() => setDetailsIndex(0)}
           disabled={!canContinue}
           accessibilityRole="button"
           accessibilityState={{ disabled: !canContinue }}>
@@ -324,11 +473,7 @@ export default function ReportScreen() {
         </Pressable>
       </View>
 
-      <DeleteReportModal
-        visible={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        onDelete={handleDeleteReport}
-      />
+      {deleteModal}
     </SafeAreaView>
   );
 }
@@ -527,6 +672,12 @@ const styles = StyleSheet.create({
     gap: Spacing.four,
   },
   header: { gap: Spacing.two },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.three,
+  },
   title: {
     fontFamily: FontFamily.regular,
     fontSize: 24,
@@ -696,7 +847,11 @@ const styles = StyleSheet.create({
     lineHeight: 16.8,
     color: ReportColors.tileText,
   },
-  addEvidenceText: { fontFamily: FontFamily.regular, fontSize: 16, color: ReportColors.tileSelectedText },
+  addEvidenceText: {
+    fontFamily: FontFamily.regular,
+    fontSize: 16,
+    color: ReportColors.tileSelectedText,
+  },
   emptyText: {
     fontFamily: FontFamily.regular,
     fontSize: 14,
