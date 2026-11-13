@@ -1,5 +1,5 @@
 import { Image } from 'expo-image';
-import { type ComponentRef, useRef, useState } from 'react';
+import { type ComponentRef, useMemo, useRef, useState } from 'react';
 import {
   Modal,
   Pressable,
@@ -24,15 +24,41 @@ const HOURS = Array.from({ length: 12 }, (_, i) => String(i + 1));
 const MINUTES = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'));
 const MERIDIEMS = ['AM', 'PM'];
 
-type TimeParts = { hour: number; minute: number; pm: boolean }; // hour is 1-12
+// How many days the day wheel shows before and after both the report's date and today.
+const DAYS_BACK = 60;
+const DAYS_AHEAD = 30;
+
+type TimeParts = { day: number; hour: number; minute: number; pm: boolean }; // day is a startOfDay timestamp; hour is 1-12
+
+const startOfDay = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+
+// Every day from DAYS_BACK before the earlier of `value` and today, to DAYS_AHEAD after the later of the two, so
+// there are always days on both sides of the starting date (and today is always reachable).
+const dayRange = (value: Date) => {
+  const shift = (date: Date, n: number) => new Date(date.getFullYear(), date.getMonth(), date.getDate() + n).getTime();
+  const today = new Date();
+  const first = Math.min(shift(value, -DAYS_BACK), shift(today, -DAYS_BACK));
+  const last = Math.max(shift(value, DAYS_AHEAD), shift(today, DAYS_AHEAD));
+  const days: number[] = [];
+  // Step by calendar date rather than adding 24h, so daylight-saving changes don't skip or repeat a day.
+  for (let d = new Date(first); d.getTime() <= last; d.setDate(d.getDate() + 1)) days.push(d.getTime());
+  return days;
+};
+
+const todayStart = () => startOfDay(new Date());
+
+const formatDay = (day: number) =>
+  day === todayStart()
+    ? 'Today'
+    : new Date(day).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).replace(',', '');
 
 const toParts = (date: Date): TimeParts => {
   const h = date.getHours();
-  return { hour: h % 12 === 0 ? 12 : h % 12, minute: date.getMinutes(), pm: h >= 12 };
+  return { day: startOfDay(date), hour: h % 12 === 0 ? 12 : h % 12, minute: date.getMinutes(), pm: h >= 12 };
 };
 
-const applyParts = (date: Date, { hour, minute, pm }: TimeParts) => {
-  const next = new Date(date);
+const applyParts = ({ day, hour, minute, pm }: TimeParts) => {
+  const next = new Date(day);
   // Seconds aren't editable, so a manually edited time is exact to the minute.
   next.setHours((hour % 12) + (pm ? 12 : 0), minute, 0, 0);
   return next;
@@ -54,8 +80,16 @@ export function EditTimeModal({ visible, value, onSave, onClose }: EditTimeModal
     if (visible) setParts(toParts(value));
   }
 
+  // Recomputed each time the modal opens, so "Today" stays correct.
+  const days = useMemo(() => (visible ? dayRange(value) : []), [visible, value]);
+  const dayLabels = useMemo(() => days.map(formatDay), [days]);
+
   const initial = toParts(value);
-  const changed = parts.hour !== initial.hour || parts.minute !== initial.minute || parts.pm !== initial.pm;
+  const changed =
+    parts.day !== initial.day ||
+    parts.hour !== initial.hour ||
+    parts.minute !== initial.minute ||
+    parts.pm !== initial.pm;
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
@@ -75,6 +109,13 @@ export function EditTimeModal({ visible, value, onSave, onClose }: EditTimeModal
             <View style={styles.wheels}>
               <View style={styles.highlight} pointerEvents="none" />
               <View style={styles.columns}>
+                <WheelColumn
+                  label="Day"
+                  items={dayLabels}
+                  index={Math.max(days.indexOf(parts.day), 0)}
+                  onChange={(i) => setParts((p) => ({ ...p, day: days[i] }))}
+                  wide
+                />
                 <WheelColumn
                   label="Hour"
                   items={HOURS}
@@ -103,7 +144,7 @@ export function EditTimeModal({ visible, value, onSave, onClose }: EditTimeModal
             </Pressable>
             <Pressable
               style={[styles.button, changed ? styles.saveEnabled : styles.saveDisabled]}
-              onPress={() => onSave(applyParts(value, parts))}
+              onPress={() => onSave(applyParts(parts))}
               disabled={!changed}
               accessibilityRole="button"
               accessibilityState={{ disabled: !changed }}>
@@ -116,12 +157,29 @@ export function EditTimeModal({ visible, value, onSave, onClose }: EditTimeModal
   );
 }
 
-type WheelColumnProps = { label: string; items: string[]; index: number; onChange: (index: number) => void };
+type WheelColumnProps = {
+  label: string;
+  items: string[];
+  index: number;
+  onChange: (index: number) => void;
+  /** A wider, right-aligned column for longer labels like "Wed Nov 11". */
+  wide?: boolean;
+};
 
-function WheelColumn({ label, items, index, onChange }: WheelColumnProps) {
+function WheelColumn({ label, items, index, onChange, wide }: WheelColumnProps) {
   const scrollRef = useRef<ComponentRef<typeof ScrollView>>(null);
   // The row currently under the highlight while scrolling, used to fade the rows around it.
   const [centered, setCentered] = useState(index);
+  // Whether the wheel has been scrolled to its starting row yet.
+  const positioned = useRef(false);
+
+  // A long list (like days) may not be measured yet when the ScrollView first lays out, so scrolling there
+  // gets clamped to the top. Retry once the content is tall enough to scroll to the starting row.
+  const scrollToStart = (contentHeight: number) => {
+    if (positioned.current || contentHeight < index * PITCH + WHEEL_HEIGHT) return;
+    scrollRef.current?.scrollTo({ y: index * PITCH, animated: false });
+    positioned.current = true;
+  };
 
   const indexFor = (e: NativeSyntheticEvent<NativeScrollEvent>) =>
     Math.min(Math.max(Math.round(e.nativeEvent.contentOffset.y / PITCH), 0), items.length - 1);
@@ -147,13 +205,14 @@ function WheelColumn({ label, items, index, onChange }: WheelColumnProps) {
   return (
     <ScrollView
       ref={scrollRef}
-      style={styles.wheel}
+      style={[styles.wheel, wide && styles.wheelWide]}
       contentContainerStyle={styles.wheelContent}
       showsVerticalScrollIndicator={false}
       snapToInterval={PITCH}
       decelerationRate="fast"
       scrollEventThrottle={16}
-      onLayout={() => scrollRef.current?.scrollTo({ y: index * PITCH, animated: false })}
+      contentOffset={{ x: 0, y: index * PITCH }}
+      onContentSizeChange={(_, height) => scrollToStart(height)}
       onScroll={handleScroll}
       onMomentumScrollEnd={commit}
       onScrollEndDrag={(e) => {
@@ -167,7 +226,8 @@ function WheelColumn({ label, items, index, onChange }: WheelColumnProps) {
       accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
       onAccessibilityAction={(e) => step(e.nativeEvent.actionName === 'increment' ? 1 : -1)}>
       {items.map((item, i) => (
-        <View key={item} style={styles.row}>
+        // Rows are a fixed, positional list, so the index is a stable key (labels aren't guaranteed unique).
+        <View key={i} style={[styles.row, wide && styles.rowWide]}>
           <Text style={[styles.rowText, Math.abs(i - centered) >= PADDING_ROWS && styles.rowFaded]}>{item}</Text>
         </View>
       ))}
@@ -197,8 +257,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: ReportColors.secondaryContainer,
   },
-  columns: { flexDirection: 'row', gap: Spacing.five, marginLeft: 40, height: WHEEL_HEIGHT },
+  columns: { flexDirection: 'row', justifyContent: 'center', gap: Spacing.four, height: WHEEL_HEIGHT },
   wheel: { width: 33, flexGrow: 0 },
+  wheelWide: { width: 110, marginRight: -Spacing.two }, // day sits a little closer to the hour
+  rowWide: { alignItems: 'flex-end' },
   wheelContent: { paddingVertical: PADDING_ROWS * PITCH, gap: ROW_GAP },
   row: { height: ROW_HEIGHT, alignItems: 'center', justifyContent: 'center' },
   rowText: { fontFamily: FontFamily.regular, fontSize: 20, lineHeight: 24, color: ReportColors.modalText },

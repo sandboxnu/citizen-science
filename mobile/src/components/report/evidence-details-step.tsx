@@ -460,7 +460,12 @@ async function getCurrentCoordinates(): Promise<Coordinates | null> {
 
 const formatCoordinates = ({ latitude, longitude }: Coordinates) => `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
 
-const formatTime = (date: Date) => date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+// e.g. "Nov. 12, 05:43 PM" (May is already short, so it gets no period).
+const formatTime = (date: Date) => {
+  const month = date.toLocaleDateString('en-US', { month: 'short' });
+  const time = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  return `${month}${month === 'May' ? '' : '.'} ${date.getDate()}, ${time}`;
+};
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: ReportColors.background },
