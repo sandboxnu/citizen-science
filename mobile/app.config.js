@@ -51,6 +51,14 @@ export default {
           imageWidth: 76,
         },
       ],
+      [
+        'expo-image-picker',
+        {
+          cameraPermission: 'Allow Sightline to take photos for your disaster reports.',
+          photosPermission: 'Allow Sightline to attach photos from your library to your disaster reports.',
+          microphonePermission: false,
+        },
+      ],
       '@react-native-firebase/app',
       '@react-native-firebase/auth',
       './plugins/withFirebaseAppDelegateFix',

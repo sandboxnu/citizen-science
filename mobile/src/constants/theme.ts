@@ -161,6 +161,19 @@ export const ReportColors = {
   destructive: '#E0672A',
   modalText: '#000000',
   overlay: 'rgba(0, 0, 0, 0.45)',
+  // Evidence details flow
+  primaryActive: '#022D59',
+  primaryLight: '#0069D5',
+  secondary: '#BBDEFF',
+  secondaryContainer: '#DEEFFE',
+  secondaryActive: '#358FEC',
+  textPrimary: '#110D07',
+  surface: '#FEFFFF',
+  sliderTrack: '#EEEEEE',
+  sheetHandle: '#BABABA',
+  sheetOverlay: 'rgba(0, 0, 0, 0.4)',
+  photoBadge: 'rgba(0, 0, 0, 0.5)',
+  photoBadgeBorder: '#F3F9FF',
 } as const;
 
 // Severity chip colors, keyed by NWS `severity`.
