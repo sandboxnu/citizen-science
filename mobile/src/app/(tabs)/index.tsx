@@ -11,11 +11,13 @@ import {
   MapOverlaySheet,
   type MapOverlayFilters,
 } from '@/components/map-overlay-sheet';
+import { TimeframePopup } from '@/components/timeframe-popup';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing, UserLocationColors } from '@/constants/theme';
 import { auth } from '@/lib/firebase';
 import { subscribeToNwsAlerts, type NwsAlert } from '@/lib/nws-alerts';
+import { DEFAULT_TIMEFRAME, isInTimeframe, type Timeframe } from '@/lib/timeframe';
 import { StartReport } from '@/components/start-report';
 import { ACTIVE_DURATION_MS, RecenterButton } from '@/components/recenter-button';
 
@@ -35,6 +37,8 @@ export default function MapScreen() {
   const [selectedAlert, setSelectedAlert] = useState<NwsAlert | null>(null);
   const [overlayFilters, setOverlayFilters] = useState<MapOverlayFilters>(DEFAULT_MAP_OVERLAY_FILTERS);
   const [overlaySheetOpen, setOverlaySheetOpen] = useState(false);
+  const [timeframe, setTimeframe] = useState<Timeframe>(DEFAULT_TIMEFRAME);
+  const [timeframePopupOpen, setTimeframePopupOpen] = useState(false);
   const mapRef = useRef<MapView>(null);
 
   useEffect(
@@ -63,7 +67,7 @@ export default function MapScreen() {
         style={styles.map}
         initialRegion={DEFAULT_REGION}
       >
-        {(overlayFilters.flooding ? nwsAlerts : []).flatMap((alert) =>
+        {(overlayFilters.flooding ? nwsAlerts.filter((alert) => isInTimeframe(alert.sent, timeframe)) : []).flatMap((alert) =>
           alert.polygons.map((polygon, i) => (
             <Polygon
               key={`${alert.id}-${i}`}
@@ -92,8 +96,11 @@ export default function MapScreen() {
       <SafeAreaView style={styles.overlay} edges={['top']} pointerEvents="box-none">
         <MapFilterBar
           filters={overlayFilters}
+          timeframe={timeframe}
           onOpenOverlay={() => setOverlaySheetOpen(true)}
+          onOpenTimeframe={() => setTimeframePopupOpen(true)}
           onChange={setOverlayFilters}
+          onTimeframeChange={setTimeframe}
         />
         {error && (
           <ThemedText type="small" themeColor="textSecondary">
@@ -114,6 +121,15 @@ export default function MapScreen() {
           setOverlaySheetOpen(false);
         }}
         onClose={() => setOverlaySheetOpen(false)}
+      />
+      <TimeframePopup
+        visible={timeframePopupOpen}
+        timeframe={timeframe}
+        onSave={(next) => {
+          setTimeframe(next);
+          setTimeframePopupOpen(false);
+        }}
+        onClose={() => setTimeframePopupOpen(false)}
       />
     </ThemedView>
   );
