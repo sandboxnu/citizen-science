@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { signOut } from '@react-native-firebase/auth';
 import { StyleSheet, View } from 'react-native';
 import MapView, { Circle, Marker, Polygon } from 'react-native-maps';
@@ -13,13 +13,15 @@ import {
 } from '@/components/map-overlay-sheet';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
+import { Spacing, UserLocationColors } from '@/constants/theme';
 import { auth } from '@/lib/firebase';
 import { subscribeToNwsAlerts, type NwsAlert } from '@/lib/nws-alerts';
+import { StartReport } from '@/components/start-report';
+import { ACTIVE_DURATION_MS, RecenterButton } from '@/components/recenter-button';
 
 // Richards Hall, Northeastern University.
 const MOCK_USER_LOCATION = { latitude: 42.3399, longitude: -71.0889 };
-const MOCK_LOCATION_ACCURACY_METERS = 30;
+const MOCK_LOCATION_ACCURACY_METERS = 93;
 
 const DEFAULT_REGION = {
   ...MOCK_USER_LOCATION,
@@ -33,6 +35,7 @@ export default function MapScreen() {
   const [selectedAlert, setSelectedAlert] = useState<NwsAlert | null>(null);
   const [overlayFilters, setOverlayFilters] = useState<MapOverlayFilters>(DEFAULT_MAP_OVERLAY_FILTERS);
   const [overlaySheetOpen, setOverlaySheetOpen] = useState(false);
+  const mapRef = useRef<MapView>(null);
 
   useEffect(
     () =>
@@ -46,9 +49,17 @@ export default function MapScreen() {
     []
   );
 
+  const recenterMap = () => {
+    mapRef.current?.animateToRegion({
+     ...DEFAULT_REGION
+    }, ACTIVE_DURATION_MS); 
+  };
+
+
   return (
     <ThemedView style={styles.container}>
       <MapView
+        ref={mapRef}
         style={styles.map}
         initialRegion={DEFAULT_REGION}
       >
@@ -69,9 +80,9 @@ export default function MapScreen() {
         <Circle
           center={MOCK_USER_LOCATION}
           radius={MOCK_LOCATION_ACCURACY_METERS}
-          fillColor="rgba(0,122,255,0.15)"
-          strokeColor="rgba(0,122,255,0.3)"
-          strokeWidth={1}
+          fillColor={UserLocationColors.radiusFill}
+          strokeColor={UserLocationColors.radiusStroke}
+          strokeWidth={1.5}
         />
         <Marker coordinate={MOCK_USER_LOCATION} anchor={{ x: 0.5, y: 0.5 }} tracksViewChanges={false}>
           <View style={styles.userDot} />
@@ -91,6 +102,9 @@ export default function MapScreen() {
         )}
       </SafeAreaView>
 
+      <StartReport onOpen={() => console.log('Start Report pressed')} />
+      <RecenterButton onRecenter={() => recenterMap()} />
+
       <AlertSheet alert={selectedAlert} onClose={() => setSelectedAlert(null)} />
       <MapOverlaySheet
         visible={overlaySheetOpen}
@@ -105,16 +119,17 @@ export default function MapScreen() {
   );
 }
 
+
 const styles = StyleSheet.create({
   container: { flex: 1 },
   map: { flex: 1 },
   userDot: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: 'rgb(0,122,255)',
-    borderWidth: 3,
-    borderColor: 'white',
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: UserLocationColors.dot,
+    borderWidth: 4,
+    borderColor: UserLocationColors.dotBorder,
   },
   overlay: {
     position: 'absolute',
