@@ -1,0 +1,58 @@
+language: en-US
+tone_instructions: "Be concise. Prioritize bugs, crashes, and security issues over style nits."
+
+reviews:
+  profile: chill
+  high_level_summary: true
+
+  # Cut walkthrough noise.
+  in_progress_fortune: false
+  suggested_labels: false
+  suggested_reviewers: false
+
+  # Posts a "CodeRabbit" status on each PR. Fails it if the review errors, so it can be a required check.
+  commit_status: true
+  fail_commit_status: true
+
+  # CodeRabbit approves PRs it rates as low risk once its comments are resolved.
+  auto_approvals:
+    enabled: true
+    max_merge_risk: low
+    max_security_risk: low
+
+  auto_review:
+    enabled: true
+    drafts: false
+    ignore_title_keywords:
+      - "WIP"
+
+  pre_merge_checks:
+    # Checks the PR against the issue in "Closes #N" (its acceptance criteria).
+    issue_assessment:
+      mode: warning
+    title:
+      mode: off
+    description:
+      mode: warning
+
+  path_filters:
+    - "!**/package-lock.json"
+    - "!mobile/ios/**"
+    - "!**/dist/**"
+    - "!firebase/functions/lib/**"
+
+  path_instructions:
+    - path: "mobile/**"
+      instructions: "Expo / React Native app, iOS only. Flag Firestore listeners without error callbacks and useEffect subscriptions without cleanup."
+    - path: "firebase/firestore.rules"
+      instructions: "Check for overly permissive rules and missing auth/ownership checks."
+    - path: "firebase/functions/**"
+      instructions: "Cloud Functions in TypeScript. Watch for unbounded Firestore batches (500 write limit) and unhandled promise rejections."
+
+chat:
+  auto_reply: true
+  art: false
+
+knowledge_base:
+  learnings:
+    scope: local
