@@ -1,15 +1,5 @@
-import { auth, firestore, storage } from '@/lib/firebase';
+import { auth, firestore } from '@/lib/firebase';
 import { GeoPoint, Timestamp, addDoc, collection } from '@react-native-firebase/firestore';
-import { getDownloadURL, putFile, ref } from '@react-native-firebase/storage';
-
-// Uploads a local photo to Storage under the user's folder and returns its download URL.
-export async function uploadReportPhoto(userId: string, localUri: string): Promise<string> {
-  const extension = localUri.split('?')[0].split('.').pop()?.toLowerCase() || 'jpg';
-  const id = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-  const photoRef = ref(storage, `reports/${userId}/${id}.${extension}`);
-  await putFile(photoRef, localUri);
-  return getDownloadURL(photoRef);
-}
 
 export type DisasterType = "flooding" | "earthquake" | "forest_fire";
 

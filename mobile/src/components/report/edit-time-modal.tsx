@@ -24,21 +24,21 @@ const HOURS = Array.from({ length: 12 }, (_, i) => String(i + 1));
 const MINUTES = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'));
 const MERIDIEMS = ['AM', 'PM'];
 
-// How many days the day wheel shows before and after both the report's date and today.
-const DAYS_BACK = 60;
-const DAYS_AHEAD = 30;
-
 type TimeParts = { day: number; hour: number; minute: number; pm: boolean }; // day is a startOfDay timestamp; hour is 1-12
 
 const startOfDay = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
 
-// Every day from DAYS_BACK before the earlier of `value` and today, to DAYS_AHEAD after the later of the two, so
-// there are always days on both sides of the starting date (and today is always reachable).
+// Every day from one month before `value` up to and including `value`'s day. Never later than `value`, so the
+// wheel stays short (about 31 rows) however old the photo's date is.
 const dayRange = (value: Date) => {
-  const shift = (date: Date, n: number) => new Date(date.getFullYear(), date.getMonth(), date.getDate() + n).getTime();
-  const today = new Date();
-  const first = Math.min(shift(value, -DAYS_BACK), shift(today, -DAYS_BACK));
-  const last = Math.max(shift(value, DAYS_AHEAD), shift(today, DAYS_AHEAD));
+  // Clamp to the previous month's last day, so e.g. Mar 31 goes back to Feb 28/29 rather than rolling over to Mar 3.
+  const lastOfPrevMonth = new Date(value.getFullYear(), value.getMonth(), 0).getDate();
+  const first = new Date(
+    value.getFullYear(),
+    value.getMonth() - 1,
+    Math.min(value.getDate(), lastOfPrevMonth),
+  ).getTime();
+  const last = startOfDay(value);
   const days: number[] = [];
   // Step by calendar date rather than adding 24h, so daylight-saving changes don't skip or repeat a day.
   for (let d = new Date(first); d.getTime() <= last; d.setDate(d.getDate() + 1)) days.push(d.getTime());

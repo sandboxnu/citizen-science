@@ -47,6 +47,15 @@ export type EvidenceDetails = {
   damageRating: number; // 1-5
 };
 
+// The location and time a photo supplies: its own GPS and capture time, or the device's location and the current
+// time when it has none.
+const detailsFromPhoto = (photo: ReportPhoto) => ({
+  location: { latitude: photo.latitude, longitude: photo.longitude },
+  locationSource: (photo.hasPhotoLocation ? 'photo' : 'current') as ValueSource,
+  observedAt: photo.takenAt ?? new Date(),
+  observedAtSource: (photo.takenAt ? 'photo' : 'current') as ValueSource,
+});
+
 export const emptyEvidenceDetails = (): EvidenceDetails => ({
   photos: [],
   location: null,
@@ -126,17 +135,14 @@ export function EvidenceDetailsStep({
     const photos = incoming.slice(0, remaining);
     if (photos.length === 0) return;
     // Location and time come from the first photo, unless already set or edited.
-    const first = photos[0];
+    const derived = detailsFromPhoto(photos[0]);
     onChange({
       ...details,
       photos: [...details.photos, ...photos],
-      ...(details.location === null && {
-        location: { latitude: first.latitude, longitude: first.longitude },
-        locationSource: first.hasPhotoLocation ? 'photo' : 'current',
-      }),
+      ...(details.location === null && { location: derived.location, locationSource: derived.locationSource }),
       ...(details.observedAt === null && {
-        observedAt: first.takenAt ?? new Date(),
-        observedAtSource: first.takenAt ? 'photo' : 'current',
+        observedAt: derived.observedAt,
+        observedAtSource: derived.observedAtSource,
       }),
     });
   };
@@ -213,7 +219,29 @@ export function EvidenceDetailsStep({
   const removePhoto = (uri: string) => {
     const photos = details.photos.filter((photo) => photo.uri !== uri);
     // Location and time come from the photos, so clear them once none are left.
-    onChange(photos.length > 0 ? { ...details, photos } : { ...details, photos, location: null, observedAt: null });
+    if (photos.length === 0) {
+      onChange({ ...details, photos, location: null, observedAt: null });
+      return;
+    }
+    // Unedited location and time always come from the first photo (they're only set when there are no photos yet,
+    // and photos can't be reordered). If that photo is removed, take them from the new first photo instead.
+    if (details.photos[0]?.uri !== uri) {
+      onChange({ ...details, photos });
+      return;
+    }
+    const derived = detailsFromPhoto(photos[0]);
+    onChange({
+      ...details,
+      photos,
+      ...(details.locationSource !== 'edited' && {
+        location: derived.location,
+        locationSource: derived.locationSource,
+      }),
+      ...(details.observedAtSource !== 'edited' && {
+        observedAt: derived.observedAt,
+        observedAtSource: derived.observedAtSource,
+      }),
+    });
   };
 
   const showUploadTile = details.photos.length < MAX_PHOTOS;

@@ -11,15 +11,11 @@ import {
   EvidenceDetailsStep,
 } from '@/components/report/evidence-details-step';
 import { CloseReportButton } from '@/components/report/close-report-button';
-import { ReportSuccess } from '@/components/report/report-success';
 import { FontFamily, ReportColors, Spacing } from '@/constants/theme';
-import { useAuth } from '@/lib/auth-context';
 import {
   isKnownConcernType,
   type KnownConcernType,
-  submitPostDisasterReport,
   toConcernType,
-  uploadReportPhoto,
 } from '@/lib/reports';
 
 type DisasterType = 'flooding';
@@ -118,9 +114,6 @@ export default function ReportScreen() {
   // null while choosing evidence; otherwise the index into `selectedEvidence` being filled in.
   const [detailsIndex, setDetailsIndex] = useState<number | null>(null);
   const [details, setDetails] = useState<Record<string, EvidenceDetails>>({});
-  const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const { user } = useAuth();
 
   const canContinue = disasterType !== null && evidence.length > 0;
   const showEvidenceOptions = evidence.length === 0 || searchFocused;
@@ -202,58 +195,9 @@ export default function ReportScreen() {
     setDetailsIndex(null);
   };
 
-  const handleSubmit = async () => {
-    if (!user || !disasterType) {
-      Alert.alert('Sign in required', 'You need to be signed in to submit a report.');
-      return;
-    }
-    const items = selectedEvidence.map((e) => ({
-      ...e,
-      details: details[e.value],
-    }));
-    const first = items[0]?.details;
-    if (!first?.location || !first.observedAt) return;
-
-    setSubmitting(true);
-    try {
-      // The same photo can be reused across evidence ("Previous uploads"), so upload each one once.
-      const uploads = new Map<string, Promise<string>>();
-      const upload = (uri: string) => {
-        if (!uploads.has(uri)) uploads.set(uri, uploadReportPhoto(user.uid, uri));
-        return uploads.get(uri)!;
-      };
-
-      const concerns = await Promise.all(
-        items.map(async ({ value, title, details: d }) => ({
-          type: isCustomEvidence(value) ? toConcernType(title) : value,
-          damageRating: d.damageRating,
-          ...(d.description.trim() && { description: d.description.trim() }),
-          photoUrls: await Promise.all(
-            d.photos.map(async (p) => ({
-              url: await upload(p.uri),
-              latitude: p.latitude,
-              longitude: p.longitude,
-            })),
-          ),
-        })),
-      );
-
-      // The report schema has one location/time, so use the first evidence item's.
-      await submitPostDisasterReport({
-        userId: user.uid,
-        disasterType,
-        latitude: first.location.latitude,
-        longitude: first.location.longitude,
-        observedAt: first.observedAt.toISOString(),
-        concerns,
-      });
-      setSubmitted(true);
-    } catch (err) {
-      console.error('Failed to submit report', err);
-      Alert.alert('Couldn’t submit report', 'Something went wrong. Check your connection and try again.');
-    } finally {
-      setSubmitting(false);
-    }
+  // Submitting isn't wired up to the backend yet.
+  const handleSubmit = () => {
+    Alert.alert('Not available yet', 'Submitting reports is not implemented yet.');
   };
 
   const deleteModal = (
@@ -263,18 +207,6 @@ export default function ReportScreen() {
       onDelete={handleDeleteReport}
     />
   );
-
-  if (submitted) {
-    return (
-      <ReportSuccess
-        onDone={() => {
-          setSubmitted(false);
-          resetReport();
-          router.navigate('/');
-        }}
-      />
-    );
-  }
 
   const currentEvidence = detailsIndex !== null ? selectedEvidence[detailsIndex] : undefined;
   if (currentEvidence && detailsIndex !== null) {
@@ -293,7 +225,6 @@ export default function ReportScreen() {
           totalSteps={selectedEvidence.length}
           details={details[currentEvidence.value] ?? emptyEvidenceDetails()}
           previousPhotos={previousPhotos}
-          submitting={submitting}
           onChange={(next) =>
             setDetails((current) => ({
               ...current,
