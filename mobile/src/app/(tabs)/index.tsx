@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState, type ComponentRef } from 'react';
-import { signOut } from '@react-native-firebase/auth';
 import { Image } from 'expo-image';
 import { Keyboard, StyleSheet, TextInput, View } from 'react-native';
 import MapView, { Circle, Marker, Polygon } from 'react-native-maps';
@@ -13,12 +12,13 @@ import {
   MapOverlaySheet,
   type MapOverlayFilters,
 } from '@/components/map-overlay-sheet';
+import { TimeframePopup } from '@/components/timeframe-popup';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing, UserLocationColors } from '@/constants/theme';
-import { auth } from '@/lib/firebase';
 import { searchPlaces, type PinnedPlace, type PlaceResult } from '@/lib/map-search';
 import { subscribeToNwsAlerts, type NwsAlert } from '@/lib/nws-alerts';
+import { DEFAULT_TIMEFRAME, isInTimeframe, type Timeframe } from '@/lib/timeframe';
 import { StartReport } from '@/components/start-report';
 import { ACTIVE_DURATION_MS, RecenterButton } from '@/components/recenter-button';
 
@@ -36,6 +36,9 @@ const DEFAULT_REGION = {
 const PLACE_SEARCH_DEBOUNCE_MS = 400;
 const MIN_PLACE_QUERY_LENGTH = 2;
 const MAP_ANIMATION_MS = 500;
+// location-pin.svg is drawn at 24 x 32.27 with its tip at the bottom center.
+const PIN_WIDTH = 24;
+const PIN_HEIGHT = 32.27;
 
 export default function MapScreen() {
   const [nwsAlerts, setNwsAlerts] = useState<NwsAlert[]>([]);
@@ -43,13 +46,20 @@ export default function MapScreen() {
   const [selectedAlert, setSelectedAlert] = useState<NwsAlert | null>(null);
   const [overlayFilters, setOverlayFilters] = useState<MapOverlayFilters>(DEFAULT_MAP_OVERLAY_FILTERS);
   const [overlaySheetOpen, setOverlaySheetOpen] = useState(false);
+  const [timeframe, setTimeframe] = useState<Timeframe>(DEFAULT_TIMEFRAME);
+  const [timeframePopupOpen, setTimeframePopupOpen] = useState(false);
   const mapRef = useRef<MapView>(null);
 
   const searchInputRef = useRef<ComponentRef<typeof TextInput>>(null);
   const [query, setQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
-  // Geocoder results tagged with the query they answer, so stale ones are ignored.
-  const [placeSearch, setPlaceSearch] = useState<{ query: string; places: PlaceResult[] } | null>(null);
+  // Search results tagged with the query they answer, so stale ones are ignored. `places` is
+  // null when the search failed (offline, service error), as opposed to [] for no matches.
+  const [placeSearch, setPlaceSearch] = useState<{ query: string; places: PlaceResult[] | null } | null>(
+    null
+  );
+  // Bumped by "Try again" to rerun a failed search for the same query.
+  const [searchAttempt, setSearchAttempt] = useState(0);
   const [pinnedPlace, setPinnedPlace] = useState<PinnedPlace | null>(null);
   const [pinLoaded, setPinLoaded] = useState(false);
 
@@ -57,6 +67,7 @@ export default function MapScreen() {
   const searchesPlaces = searchOpen && trimmedQuery.length >= MIN_PLACE_QUERY_LENGTH;
   const placesAnswered = placeSearch?.query === trimmedQuery;
   const placeResults = searchesPlaces && placesAnswered ? placeSearch.places : [];
+  const searchFailed = placeResults === null;
 
   useEffect(() => {
     if (!searchesPlaces) return;
@@ -69,7 +80,12 @@ export default function MapScreen() {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [searchesPlaces, trimmedQuery]);
+  }, [searchesPlaces, trimmedQuery, searchAttempt]);
+
+  const retrySearch = () => {
+    setPlaceSearch(null);
+    setSearchAttempt((attempt) => attempt + 1);
+  };
 
   useEffect(
     () =>
@@ -122,7 +138,7 @@ export default function MapScreen() {
         initialRegion={DEFAULT_REGION}
         onPress={() => searchOpen && closeSearch()}
       >
-        {(overlayFilters.flooding ? nwsAlerts : []).flatMap((alert) =>
+        {(overlayFilters.flooding ? nwsAlerts.filter((alert) => isInTimeframe(alert.sent, timeframe)) : []).flatMap((alert) =>
           alert.polygons.map((polygon, i) => (
             <Polygon
               key={`${alert.id}-${i}`}
@@ -150,7 +166,10 @@ export default function MapScreen() {
           <Marker
             key={pinnedPlace.id}
             coordinate={pinnedPlace.coordinate}
+            // Put the pin's tip on the place: `anchor` for Google Maps (Android),
+            // `centerOffset` for Apple Maps (iOS), which ignores `anchor`.
             anchor={{ x: 0.5, y: 1 }}
+            centerOffset={{ x: 0, y: -PIN_HEIGHT / 2 }}
             tracksViewChanges={!pinLoaded}
             accessibilityLabel={pinnedPlace.name}>
             <Image
@@ -165,21 +184,28 @@ export default function MapScreen() {
       <SafeAreaView style={styles.overlay} edges={['top']} pointerEvents="box-none">
         <MapFilterBar
           filters={overlayFilters}
+          timeframe={timeframe}
           onOpenOverlay={() => setOverlaySheetOpen(true)}
+          onOpenTimeframe={() => setTimeframePopupOpen(true)}
           onChange={setOverlayFilters}
+          onTimeframeChange={setTimeframe}
           inputRef={searchInputRef}
           query={query}
           onChangeQuery={(text) => {
             setQuery(text);
             setSearchOpen(true);
+            // Erasing the query by keyboard removes the pin, like the clear button.
+            if (!text) setPinnedPlace(null);
           }}
           onFocusSearch={() => setSearchOpen(true)}
           onClearQuery={clearSearch}
           results={
             searchesPlaces ? (
               <MapSearchResults
-                places={placeResults}
+                places={placeResults ?? []}
                 loading={!placesAnswered}
+                failed={searchFailed}
+                onRetry={retrySearch}
                 onSelectPlace={selectPlace}
               />
             ) : undefined
@@ -205,6 +231,15 @@ export default function MapScreen() {
         }}
         onClose={() => setOverlaySheetOpen(false)}
       />
+      <TimeframePopup
+        visible={timeframePopupOpen}
+        timeframe={timeframe}
+        onSave={(next) => {
+          setTimeframe(next);
+          setTimeframePopupOpen(false);
+        }}
+        onClose={() => setTimeframePopupOpen(false)}
+      />
     </ThemedView>
   );
 }
@@ -221,7 +256,7 @@ const styles = StyleSheet.create({
     borderWidth: 4,
     borderColor: UserLocationColors.dotBorder,
   },
-  locationPin: { width: 24, height: 32.27 },
+  locationPin: { width: PIN_WIDTH, height: PIN_HEIGHT },
   overlay: {
     position: 'absolute',
     top: 0,
