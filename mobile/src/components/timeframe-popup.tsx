@@ -284,7 +284,6 @@ function DateInput({ value, placeholder, focused, error, label, onFocus, onBlur,
       placeholder={placeholder}
       placeholderTextColor={error ? MapOverlayColors.error : MapOverlayColors.searchPlaceholder}
       keyboardType="number-pad"
-      maxLength={10}
       onFocus={onFocus}
       onBlur={onBlur}
       onChangeText={onChange}

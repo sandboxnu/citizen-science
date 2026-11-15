@@ -64,8 +64,27 @@ export function parseDateInput(text: string): Date | null {
   return valid ? date : null;
 }
 
-// Inserts the slashes as the user types digits.
+const SEGMENT_PLACEHOLDERS = ['MM', 'DD', 'YYYY'];
+const SEGMENT_LIMITS = [2, 2, 4];
+
+// Inserts slashes as the user types. When a segment is deleted from an existing date,
+// it's replaced with its placeholder (11/30/2026 -> 11/DD/2026) so the others don't shift.
 export function maskDateInput(text: string): string {
+  if (text.includes('/')) {
+    const parts = text.split('/');
+    if (parts.length === 3) {
+      const cleaned = parts.map((part, i) => part.replace(/\D/g, '').slice(0, SEGMENT_LIMITS[i]));
+      // Drop trailing empty segments so normal backspacing at the end still works.
+      let last = cleaned.length;
+      while (last > 0 && !cleaned[last - 1]) last--;
+      return cleaned
+        .slice(0, last)
+        .map((part, i) => part || SEGMENT_PLACEHOLDERS[i])
+        .join('/');
+    }
+  }
+
+  // No slashes yet (or the structure was broken): format the digits fresh.
   const digits = text.replace(/\D/g, '').slice(0, 8);
   if (digits.length <= 2) return digits;
   if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
