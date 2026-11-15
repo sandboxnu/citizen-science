@@ -1,3 +1,4 @@
+import type { ComponentRef, ReactNode, Ref } from 'react';
 import { Image, type ImageSource } from 'expo-image';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
@@ -8,54 +9,83 @@ type MapFilterBarProps = {
   filters: MapOverlayFilters;
   onOpenOverlay: () => void;
   onChange: (filters: MapOverlayFilters) => void;
+  query: string;
+  onChangeQuery: (query: string) => void;
+  onFocusSearch: () => void;
+  onClearQuery: () => void;
+  inputRef?: Ref<ComponentRef<typeof TextInput>>;
+  // Search results dropdown. When present it replaces the chips.
+  results?: ReactNode;
 };
 
 // Search bar plus the filter chips that float over the top of the map.
-export function MapFilterBar({ filters, onOpenOverlay, onChange }: MapFilterBarProps) {
+export function MapFilterBar({
+  filters,
+  onOpenOverlay,
+  onChange,
+  query,
+  onChangeQuery,
+  onFocusSearch,
+  onClearQuery,
+  inputRef,
+  results,
+}: MapFilterBarProps) {
   // The "Map Overlay" chip turns blue whenever any disaster overlay is on.
   const anyActive = Object.values(filters).some(Boolean);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, results ? styles.containerWithResults : null]}>
       <View style={styles.search}>
         <Image source={require('@/assets/images/mapIcons/search.svg')} style={styles.icon} />
         <TextInput
+          ref={inputRef}
           style={styles.searchInput}
-          placeholder="Search incident, address, or place..."
+          value={query}
+          onChangeText={onChangeQuery}
+          onFocus={onFocusSearch}
+          autoCorrect={false}
+          placeholder="Search address or place..."
           placeholderTextColor={MapOverlayColors.searchPlaceholder}
           returnKeyType="search"
           accessibilityLabel="Search"
         />
-      </View>
-
-      <View style={styles.chips}>
-        <Chip
-          label="Map Overlay"
-          active={anyActive}
-          icon={
-            anyActive
-              ? require('@/assets/images/mapIcons/layers-light.svg')
-              : require('@/assets/images/mapIcons/layers-dark.svg')
-          }
-          trailingIcon={
-            anyActive
-              ? require('@/assets/images/mapIcons/chevron-down-light.svg')
-              : require('@/assets/images/mapIcons/chevron-down-dark.svg')
-          }
-          onPress={onOpenOverlay}
-          accessibilityLabel="Open map overlay filters"
-        />
-        {filters.flooding && (
-          <Chip
-            label="Flooding"
-            active
-            icon={require('@/assets/images/mapIcons/waves.svg')}
-            trailingIcon={require('@/assets/images/mapIcons/close.svg')}
-            onPress={() => onChange({ ...filters, flooding: false })}
-            accessibilityLabel="Remove flooding overlay"
-          />
+        {query.length > 0 && (
+          <Pressable onPress={onClearQuery} hitSlop={12} accessibilityRole="button" accessibilityLabel="Clear search">
+            <Image source={require('@/assets/images/mapIcons/cancel.svg')} style={styles.icon} />
+          </Pressable>
         )}
       </View>
+
+      {results ?? (
+        <View style={styles.chips}>
+          <Chip
+            label="Map Overlay"
+            active={anyActive}
+            icon={
+              anyActive
+                ? require('@/assets/images/mapIcons/layers-light.svg')
+                : require('@/assets/images/mapIcons/layers-dark.svg')
+            }
+            trailingIcon={
+              anyActive
+                ? require('@/assets/images/mapIcons/chevron-down-light.svg')
+                : require('@/assets/images/mapIcons/chevron-down-dark.svg')
+            }
+            onPress={onOpenOverlay}
+            accessibilityLabel="Open map overlay filters"
+          />
+          {filters.flooding && (
+            <Chip
+              label="Flooding"
+              active
+              icon={require('@/assets/images/mapIcons/waves.svg')}
+              trailingIcon={require('@/assets/images/mapIcons/close.svg')}
+              onPress={() => onChange({ ...filters, flooding: false })}
+              accessibilityLabel="Remove flooding overlay"
+            />
+          )}
+        </View>
+      )}
     </View>
   );
 }
@@ -85,6 +115,7 @@ function Chip({ label, active, icon, trailingIcon, onPress, accessibilityLabel }
 
 const styles = StyleSheet.create({
   container: { gap: Spacing.two },
+  containerWithResults: { gap: Spacing.one },
   search: {
     height: 40,
     flexDirection: 'row',

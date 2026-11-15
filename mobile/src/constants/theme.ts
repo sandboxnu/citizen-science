@@ -70,6 +70,14 @@ export const MapOverlayColors = {
   chipInactiveText: '#271F16',
 } as const;
 
+// Map search results dropdown from the SIGHTLINE Figma handoff.
+export const MapSearchColors = {
+  card: '#FEFFFF',
+  text: '#271F16',
+  subtle: '#86827D',
+  divider: '#EEEEEE',
+} as const;
+
 // Start Report button
 export const StartReportColors = {
   background: '#054A91',

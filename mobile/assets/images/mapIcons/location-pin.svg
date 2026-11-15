@@ -1,0 +1,15 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="24" height="32.2672" viewBox="0 0 24 32.2672" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="Frame 1076">
+<g id="Union">
+<use xlink:href="#stroke0_0_4" fill="#E75A0E"/>
+<mask id="stroke1_0_4" fill="white">
+<use xlink:href="#stroke0_0_4"/>
+</mask>
+<path d="M12 0C18.6273 0 23.9998 5.37275 24 12C24 15.3574 22.6183 18.3901 20.3959 20.568C20.3048 20.6573 20.2205 20.7535 20.1463 20.8573L13.6275 29.9872C12.83 31.1042 11.1699 31.1043 10.3723 29.9873L3.85055 20.8551C3.77652 20.7514 3.69241 20.6554 3.60147 20.5662C1.3804 18.3885 0 15.3563 0 12C0.000197911 5.37275 5.37271 0 12 0Z" stroke-width="2.4" stroke-linejoin="round" stroke="#FEFFFF" mask="url(#stroke1_0_4)"/>
+</g>
+<circle id="Ellipse 7" cx="12" cy="12" r="5.6" fill="white"/>
+</g>
+<defs>
+<path id="stroke0_0_4" d="M12 0C18.6273 0 23.9998 5.37275 24 12C24 15.3574 22.6183 18.3901 20.3959 20.568C20.3048 20.6573 20.2205 20.7535 20.1463 20.8573L13.6275 29.9872C12.83 31.1042 11.1699 31.1043 10.3723 29.9873L3.85055 20.8551C3.77652 20.7514 3.69241 20.6554 3.60147 20.5662C1.3804 18.3885 0 15.3563 0 12C0.000197911 5.37275 5.3727 0 12 0Z"/>
+</defs>
+</svg>

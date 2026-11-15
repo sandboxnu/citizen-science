@@ -1,11 +1,13 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ComponentRef } from 'react';
 import { signOut } from '@react-native-firebase/auth';
-import { StyleSheet, View } from 'react-native';
+import { Image } from 'expo-image';
+import { Keyboard, StyleSheet, TextInput, View } from 'react-native';
 import MapView, { Circle, Marker, Polygon } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AlertSheet } from '@/components/alert-sheet';
 import { MapFilterBar } from '@/components/map-filter-bar';
+import { MapSearchResults } from '@/components/map-search-results';
 import {
   DEFAULT_MAP_OVERLAY_FILTERS,
   MapOverlaySheet,
@@ -15,6 +17,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing, UserLocationColors } from '@/constants/theme';
 import { auth } from '@/lib/firebase';
+import { searchPlaces, type PlaceResult } from '@/lib/map-search';
 import { subscribeToNwsAlerts, type NwsAlert } from '@/lib/nws-alerts';
 import { StartReport } from '@/components/start-report';
 import { ACTIVE_DURATION_MS, RecenterButton } from '@/components/recenter-button';
@@ -29,6 +32,12 @@ const DEFAULT_REGION = {
   longitudeDelta: 0.05,
 };
 
+// Wait for typing to pause before geocoding; the platform geocoder rate-limits.
+const PLACE_SEARCH_DEBOUNCE_MS = 400;
+const MIN_PLACE_QUERY_LENGTH = 2;
+const PLACE_ZOOM_DELTA = 0.02;
+const MAP_ANIMATION_MS = 500;
+
 export default function MapScreen() {
   const [nwsAlerts, setNwsAlerts] = useState<NwsAlert[]>([]);
   const [error, setError] = useState(false);
@@ -36,6 +45,32 @@ export default function MapScreen() {
   const [overlayFilters, setOverlayFilters] = useState<MapOverlayFilters>(DEFAULT_MAP_OVERLAY_FILTERS);
   const [overlaySheetOpen, setOverlaySheetOpen] = useState(false);
   const mapRef = useRef<MapView>(null);
+
+  const searchInputRef = useRef<ComponentRef<typeof TextInput>>(null);
+  const [query, setQuery] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
+  // Geocoder results tagged with the query they answer, so stale ones are ignored.
+  const [placeSearch, setPlaceSearch] = useState<{ query: string; places: PlaceResult[] } | null>(null);
+  const [pinnedPlace, setPinnedPlace] = useState<PlaceResult | null>(null);
+  const [pinLoaded, setPinLoaded] = useState(false);
+
+  const trimmedQuery = query.trim();
+  const searchesPlaces = searchOpen && trimmedQuery.length >= MIN_PLACE_QUERY_LENGTH;
+  const placesAnswered = placeSearch?.query === trimmedQuery;
+  const placeResults = searchesPlaces && placesAnswered ? placeSearch.places : [];
+
+  useEffect(() => {
+    if (!searchesPlaces) return;
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      const places = await searchPlaces(trimmedQuery, MOCK_USER_LOCATION);
+      if (!cancelled) setPlaceSearch({ query: trimmedQuery, places });
+    }, PLACE_SEARCH_DEBOUNCE_MS);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [searchesPlaces, trimmedQuery]);
 
   useEffect(
     () =>
@@ -48,6 +83,30 @@ export default function MapScreen() {
       ),
     []
   );
+
+  const closeSearch = () => {
+    Keyboard.dismiss();
+    searchInputRef.current?.blur();
+    setSearchOpen(false);
+  };
+
+  const selectPlace = (place: PlaceResult) => {
+    closeSearch();
+    setQuery(place.name);
+    setPinnedPlace(place);
+    mapRef.current?.animateToRegion(
+      { ...place.coordinate, latitudeDelta: PLACE_ZOOM_DELTA, longitudeDelta: PLACE_ZOOM_DELTA },
+      MAP_ANIMATION_MS
+    );
+  };
+
+  const clearSearch = () => {
+    setQuery('');
+    setPinnedPlace(null);
+  };
+
+  // Wait for the geocoder to answer so "No results found." doesn't flash while typing.
+  const showResults = searchesPlaces && placesAnswered;
 
   const recenterMap = () => {
     mapRef.current?.animateToRegion({
@@ -62,6 +121,7 @@ export default function MapScreen() {
         ref={mapRef}
         style={styles.map}
         initialRegion={DEFAULT_REGION}
+        onPress={() => searchOpen && closeSearch()}
       >
         {(overlayFilters.flooding ? nwsAlerts : []).flatMap((alert) =>
           alert.polygons.map((polygon, i) => (
@@ -87,6 +147,20 @@ export default function MapScreen() {
         <Marker coordinate={MOCK_USER_LOCATION} anchor={{ x: 0.5, y: 0.5 }} tracksViewChanges={false}>
           <View style={styles.userDot} />
         </Marker>
+        {pinnedPlace && (
+          <Marker
+            key={pinnedPlace.id}
+            coordinate={pinnedPlace.coordinate}
+            anchor={{ x: 0.5, y: 1 }}
+            tracksViewChanges={!pinLoaded}
+            accessibilityLabel={pinnedPlace.name}>
+            <Image
+              source={require('@/assets/images/mapIcons/location-pin.svg')}
+              style={styles.locationPin}
+              onLoad={() => setPinLoaded(true)}
+            />
+          </Marker>
+        )}
       </MapView>
 
       <SafeAreaView style={styles.overlay} edges={['top']} pointerEvents="box-none">
@@ -94,6 +168,19 @@ export default function MapScreen() {
           filters={overlayFilters}
           onOpenOverlay={() => setOverlaySheetOpen(true)}
           onChange={setOverlayFilters}
+          inputRef={searchInputRef}
+          query={query}
+          onChangeQuery={(text) => {
+            setQuery(text);
+            setSearchOpen(true);
+          }}
+          onFocusSearch={() => setSearchOpen(true)}
+          onClearQuery={clearSearch}
+          results={
+            showResults ? (
+              <MapSearchResults places={placeResults} onSelectPlace={selectPlace} />
+            ) : undefined
+          }
         />
         {error && (
           <ThemedText type="small" themeColor="textSecondary">
@@ -131,6 +218,7 @@ const styles = StyleSheet.create({
     borderWidth: 4,
     borderColor: UserLocationColors.dotBorder,
   },
+  locationPin: { width: 24, height: 32.27 },
   overlay: {
     position: 'absolute',
     top: 0,
