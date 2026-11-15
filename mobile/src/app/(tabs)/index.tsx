@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { signOut } from '@react-native-firebase/auth';
 import { StyleSheet, View } from 'react-native';
 import MapView, { Circle, Marker, Polygon } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -15,7 +14,6 @@ import { TimeframePopup } from '@/components/timeframe-popup';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing, UserLocationColors } from '@/constants/theme';
-import { auth } from '@/lib/firebase';
 import { subscribeToNwsAlerts, type NwsAlert } from '@/lib/nws-alerts';
 import { DEFAULT_TIMEFRAME, isInTimeframe, type Timeframe } from '@/lib/timeframe';
 import { StartReport } from '@/components/start-report';
