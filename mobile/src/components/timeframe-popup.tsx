@@ -3,7 +3,7 @@
 
 import { Image } from 'expo-image';
 import { useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { TimeframeCalendar } from '@/components/timeframe-calendar';
@@ -119,7 +119,7 @@ export function TimeframePopup({ visible, timeframe, onSave, onClose }: Timefram
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <View style={styles.root}>
+      <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <Pressable style={styles.backdrop} onPress={onClose} accessibilityLabel="Close timeframe" />
 
         <View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, 48) }]}>
@@ -234,7 +234,7 @@ export function TimeframePopup({ visible, timeframe, onSave, onClose }: Timefram
             </Pressable>
           </View>
         </View>
-      </View>
+        </KeyboardAvoidingView>
     </Modal>
   );
 }
