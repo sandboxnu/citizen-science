@@ -1,5 +1,4 @@
-// Bottom popup for choosing the map's timeframe: a preset (past 7/30/60 days) or a custom date range.
-// Keeps a draft of the choice until Save and shows errors for invalid custom dates.
+// Popup for choosing the map's timeframe
 
 import { Image } from 'expo-image';
 import { useState } from 'react';
@@ -31,8 +30,6 @@ type DateField = 'start' | 'end';
 type DateError = {
   field: DateField;
   message: string;
-  // Rules about a complete, parsed date show right away; the empty/partial ones wait
-  // until the field is left or Save is pressed so typing isn't flagged mid-entry.
   immediate: boolean;
 };
 
@@ -111,7 +108,6 @@ export function TimeframePopup({ visible, timeframe, onSave, onClose }: Timefram
   const setText = (field: DateField, text: string) =>
     setDraft((d) => ({ ...d, [field === 'start' ? 'startText' : 'endText']: maskDateInput(text) }));
 
-  // Tapping a calendar day fills the active field, then moves on to the end date.
   const selectDay = (date: Date) => {
     setText(activeField, formatDateInput(date));
     if (activeField === 'start') setActiveField('end');
@@ -348,8 +344,6 @@ const styles = StyleSheet.create({
     color: MapOverlayColors.subtle,
   },
   chevron: { width: 24, height: 24 },
-  // Fixed size and top alignment so rotating doesn't swing the icon out of place
-  // when the collapsed row stretches to two lines of text.
   chevronDown: { width: 24, height: 24, alignSelf: 'flex-start', transform: [{ rotate: '90deg' }] },
   chevronUp: { width: 24, height: 24, alignSelf: 'flex-start', transform: [{ rotate: '-90deg' }] },
   options: { gap: Spacing.two },

@@ -1,5 +1,4 @@
-// Timeframe filter logic: the Timeframe type, which alerts fall inside it, its tag label, and
-// parsing/formatting of MM/DD/YYYY dates.
+// Timeframe filter logic for past 7 days, past 30 days, past 60 days, or a custom date range
 
 export type TimeframePreset = 'past7' | 'past30' | 'past60';
 
@@ -67,8 +66,6 @@ export function parseDateInput(text: string): Date | null {
 const SEGMENT_PLACEHOLDERS = ['MM', 'DD', 'YYYY'];
 const SEGMENT_LIMITS = [2, 2, 4];
 
-// Inserts slashes as the user types. When a segment is deleted from an existing date,
-// it's replaced with its placeholder (11/30/2026 -> 11/DD/2026) so the others don't shift.
 export function maskDateInput(text: string): string {
   if (text.includes('/')) {
     const parts = text.split('/');
@@ -84,7 +81,6 @@ export function maskDateInput(text: string): string {
     }
   }
 
-  // No slashes yet (or the structure was broken): format the digits fresh.
   const digits = text.replace(/\D/g, '').slice(0, 8);
   if (digits.length <= 2) return digits;
   if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;

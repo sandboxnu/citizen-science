@@ -15,7 +15,6 @@ type MapFilterBarProps = {
   onTimeframeChange: (timeframe: Timeframe) => void;
 };
 
-// Search bar plus the filter chips that float over the top of the map.
 export function MapFilterBar({
   filters,
   timeframe,
@@ -24,14 +23,9 @@ export function MapFilterBar({
   onChange,
   onTimeframeChange,
 }: MapFilterBarProps) {
-  // The "Map Overlay" chip turns blue whenever any disaster overlay is on.
   const anyActive = Object.values(filters).some(Boolean);
-  // The default timeframe is not shown as a tag; only a narrowed or custom one is.
   const timeframeActive = !isDefaultTimeframe(timeframe);
 
-  // When a tag is added, bring the end of the row into view so the new tag's X isn't left past the
-  // screen edge. Nothing scrolls on first render or when a tag is removed. The scroll waits for
-  // the row's new size.
   const scrollRef = useRef<ComponentRef<typeof ScrollView>>(null);
   const scrollToEndPending = useRef(false);
   const tagCount = Number(timeframeActive) + Number(filters.flooding);
@@ -133,8 +127,6 @@ type ChipProps = {
   trailingIcon: ImageSource | number;
   onPress: () => void;
   accessibilityLabel: string;
-  // When set, the trailing icon is its own tap target (e.g. an X that removes the tag) and
-  // onPress only covers the rest of the chip.
   onTrailingPress?: () => void;
   trailingAccessibilityLabel?: string;
 };
@@ -210,8 +202,6 @@ const styles = StyleSheet.create({
     color: MapOverlayColors.text,
   },
   icon: { width: 16, height: 16 },
-  // The tags scroll edge to edge, so cancel the screen's side padding (Spacing.five, set on the
-  // map overlay) and put it back inside the content so the first tag lines up with the search bar.
   chipsScroll: { flexGrow: 0, marginHorizontal: -Spacing.five },
   chips: {
     flexDirection: 'row',
@@ -225,8 +215,6 @@ const styles = StyleSheet.create({
     borderRadius: 30,
   },
   chipPadding: { padding: Spacing.ten },
-  // Split chip: the 10px chip padding is divided between the two tap targets, with half the
-  // 4px icon gap on each side of the seam so the chip is the same size as a one-piece chip.
   chipBody: {
     flexDirection: 'row',
     alignItems: 'center',

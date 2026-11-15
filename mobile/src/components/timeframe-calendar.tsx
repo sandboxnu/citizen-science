@@ -1,5 +1,4 @@
-// Month calendar inside the timeframe popup. Shows the selected start/end dates and the days between them,
-// and reports the day the user taps.
+// Month calendar inside the timeframe popup
 
 import { Image } from 'expo-image';
 import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react';
@@ -14,14 +13,12 @@ const MONTH_FORMAT = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'nu
 type TimeframeCalendarProps = {
   start: Date | null;
   end: Date | null;
-  // Month to show when the calendar opens.
   initialMonth: Date;
   onSelect: (date: Date) => void;
 };
 
 const sameDay = (a: Date | null, b: Date) => a !== null && a.getTime() === b.getTime();
 
-// One cell per day of the month, padded with nulls so the first day lands on its weekday.
 function monthCells(month: Date): (Date | null)[] {
   const year = month.getFullYear();
   const index = month.getMonth();
@@ -33,8 +30,6 @@ function monthCells(month: Date): (Date | null)[] {
   return cells;
 }
 
-// Moves the visible month to `date`'s month when `date` changes, but not on mount
-// (initialMonth already covers that) and not if that month is already showing.
 function useFollowDate(date: Date | null, setMonth: Dispatch<SetStateAction<Date>>) {
   const key = date?.getTime() ?? null;
   const prevKey = useRef(key);
@@ -56,7 +51,7 @@ export function TimeframeCalendar({ start, end, initialMonth, onSelect }: Timefr
   const [month, setMonth] = useState(() => new Date(initialMonth.getFullYear(), initialMonth.getMonth(), 1));
 
   useFollowDate(start, setMonth);
-  useFollowDate(end, setMonth); // declared second, so if both change at once the end date wins
+  useFollowDate(end, setMonth); 
 
   const shiftMonth = (delta: number) => setMonth((m) => new Date(m.getFullYear(), m.getMonth() + delta, 1));
 
