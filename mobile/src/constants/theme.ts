@@ -68,6 +68,11 @@ export const MapOverlayColors = {
   chipActiveText: '#FEFFFF',
   chipInactive: '#FEFFFF',
   chipInactiveText: '#271F16',
+  inputText: '#110D07',
+  bodySubtle: '#4B443B',
+  subtle: '#86827D',
+  rangeBand: '#DEEFFE',
+  error: '#E0672A',
 } as const;
 
 // Start Report button
