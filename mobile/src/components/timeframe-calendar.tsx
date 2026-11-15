@@ -2,7 +2,7 @@
 // and reports the day the user taps.
 
 import { Image } from 'expo-image';
-import { useState } from 'react';
+import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { FontFamily, MapOverlayColors, Spacing } from '@/constants/theme';
@@ -33,8 +33,30 @@ function monthCells(month: Date): (Date | null)[] {
   return cells;
 }
 
+// Moves the visible month to `date`'s month when `date` changes, but not on mount
+// (initialMonth already covers that) and not if that month is already showing.
+function useFollowDate(date: Date | null, setMonth: Dispatch<SetStateAction<Date>>) {
+  const key = date?.getTime() ?? null;
+  const prevKey = useRef(key);
+
+  useEffect(() => {
+    if (key === prevKey.current) return;
+    prevKey.current = key;
+    if (!date) return;
+    setMonth((m) =>
+      m.getFullYear() === date.getFullYear() && m.getMonth() === date.getMonth()
+        ? m
+        : new Date(date.getFullYear(), date.getMonth(), 1),
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+}
+
 export function TimeframeCalendar({ start, end, initialMonth, onSelect }: TimeframeCalendarProps) {
   const [month, setMonth] = useState(() => new Date(initialMonth.getFullYear(), initialMonth.getMonth(), 1));
+
+  useFollowDate(start, setMonth);
+  useFollowDate(end, setMonth); // declared second, so if both change at once the end date wins
 
   const shiftMonth = (delta: number) => setMonth((m) => new Date(m.getFullYear(), m.getMonth() + delta, 1));
 
