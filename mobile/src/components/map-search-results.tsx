@@ -6,19 +6,29 @@ import type { PlaceResult } from '@/lib/map-search';
 
 type MapSearchResultsProps = {
   places: PlaceResult[];
-  // The geocoder hasn't answered the current query yet.
+  // The search hasn't answered the current query yet.
   loading?: boolean;
+  // The search failed (offline, service error), rather than finding nothing.
+  failed?: boolean;
+  onRetry?: () => void;
   onSelectPlace: (place: PlaceResult) => void;
 };
 
 // Dropdown under the map search bar listing geocoded places.
-export function MapSearchResults({ places, loading, onSelectPlace }: MapSearchResultsProps) {
+export function MapSearchResults({ places, loading, failed, onRetry, onSelectPlace }: MapSearchResultsProps) {
   return (
     <View style={styles.card}>
       {loading ? (
         <View style={[styles.row, styles.titleRow]} accessibilityRole="progressbar" accessibilityLabel="Searching">
           <ActivityIndicator size="small" color={MapSearchColors.subtle} style={styles.icon} />
           <Text style={[styles.title, styles.loadingText]}>Searching...</Text>
+        </View>
+      ) : failed ? (
+        <View style={[styles.row, styles.failedRow]}>
+          <Text style={[styles.title, styles.failedText]}>Couldn&apos;t search right now.</Text>
+          <Pressable onPress={onRetry} hitSlop={8} accessibilityRole="button" accessibilityLabel="Try search again">
+            <Text style={styles.retry}>Try again</Text>
+          </Pressable>
         </View>
       ) : places.length === 0 ? (
         <View style={styles.row}>
@@ -68,6 +78,9 @@ const styles = StyleSheet.create({
     color: MapSearchColors.text,
   },
   loadingText: { color: MapSearchColors.subtle },
+  failedRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  failedText: { flex: 1 },
+  retry: { fontFamily: FontFamily.medium, fontSize: 14, color: MapSearchColors.action },
   subtitle: {
     paddingHorizontal: Spacing.eleven,
     fontFamily: FontFamily.regular,

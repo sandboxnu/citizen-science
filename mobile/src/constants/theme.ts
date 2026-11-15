@@ -81,6 +81,7 @@ export const MapSearchColors = {
   text: '#271F16',
   subtle: '#86827D',
   divider: '#EEEEEE',
+  action: '#0069D5',
 } as const;
 
 // Start Report button

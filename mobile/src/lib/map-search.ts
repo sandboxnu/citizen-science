@@ -183,8 +183,9 @@ function describe(
 
 // Places matching `query`, nearby ones first. Uses Apple Maps search where it's built in (iOS),
 // which lists every match ("31 Mohave Rd" in Worcester and Medfield) plus businesses and
-// landmarks; elsewhere falls back to the platform geocoder. Never throws.
-export async function searchPlaces(query: string, origin: LatLng): Promise<PlaceResult[]> {
+// landmarks; elsewhere falls back to the platform geocoder. Resolves to null when the search
+// itself failed (offline, service error), so callers can tell that apart from no matches.
+export async function searchPlaces(query: string, origin: LatLng): Promise<PlaceResult[] | null> {
   return PlaceSearch ? searchMapKit(PlaceSearch, query, origin) : searchGeocoder(query, origin);
 }
 
@@ -192,7 +193,7 @@ async function searchMapKit(
   mapKit: NonNullable<typeof PlaceSearch>,
   query: string,
   origin: LatLng
-): Promise<PlaceResult[]> {
+): Promise<PlaceResult[] | null> {
   try {
     const suggestions = await mapKit.autocomplete(
       query,
@@ -224,14 +225,14 @@ async function searchMapKit(
       },
     }));
   } catch {
-    return [];
+    return null;
   }
 }
 
 // Platform geocoder (CLGeocoder on iOS), closest to `origin` first. Hits that don't fuzzy-match
 // the query are dropped, and each is labeled at the level the query names (a city search shows
 // the city, not a street near its center).
-async function searchGeocoder(query: string, origin: LatLng): Promise<PlaceResult[]> {
+async function searchGeocoder(query: string, origin: LatLng): Promise<PlaceResult[] | null> {
   const queryTokens = tokenize(query);
   if (queryTokens.length === 0) return [];
   const houseNumber = leadingHouseNumber(query);
@@ -270,6 +271,6 @@ async function searchGeocoder(query: string, origin: LatLng): Promise<PlaceResul
         resolve: async () => pinned,
       }));
   } catch {
-    return [];
+    return null;
   }
 }

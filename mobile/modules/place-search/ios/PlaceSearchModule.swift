@@ -9,9 +9,9 @@ public class PlaceSearchModule: Module {
     Name("PlaceSearch")
 
     AsyncFunction("autocomplete") {
-      (query: String, latitude: Double, longitude: Double, radiusMeters: Double) async -> [[String: Any]] in
+      (query: String, latitude: Double, longitude: Double, radiusMeters: Double) async throws -> [[String: Any]] in
       let center = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
-      return await searcher.autocomplete(query, center: center, radiusMeters: radiusMeters)
+      return try await searcher.autocomplete(query, center: center, radiusMeters: radiusMeters)
     }
 
     AsyncFunction("resolve") { (id: String) async throws -> [String: Any]? in
@@ -42,7 +42,8 @@ private final class PlaceSearcher: NSObject, @preconcurrency MKLocalSearchComple
     completer.resultTypes = [.address, .pointOfInterest]
   }
 
-  func autocomplete(_ query: String, center: CLLocationCoordinate2D, radiusMeters: Double) async -> [[String: Any]] {
+  // Throws only when the search itself fails (offline, service error); no matches is [].
+  func autocomplete(_ query: String, center: CLLocationCoordinate2D, radiusMeters: Double) async throws -> [[String: Any]] {
     let region = MKCoordinateRegion(
       center: center,
       latitudinalMeters: radiusMeters * 2,
@@ -70,7 +71,12 @@ private final class PlaceSearcher: NSObject, @preconcurrency MKLocalSearchComple
     request.naturalLanguageQuery = query
     request.region = region
     request.resultTypes = [.address, .pointOfInterest]
-    guard let response = try? await MKLocalSearch(request: request).start() else { return [] }
+    let response: MKLocalSearch.Response
+    do {
+      response = try await MKLocalSearch(request: request).start()
+    } catch let error as MKError where error.code == .placemarkNotFound {
+      return []
+    }
     return response.mapItems.enumerated().map { index, item in
       let id = "s\(batchId)-\(index)"
       mapItems[id] = item
