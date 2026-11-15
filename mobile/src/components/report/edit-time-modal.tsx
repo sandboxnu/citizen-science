@@ -28,17 +28,19 @@ type TimeParts = { day: number; hour: number; minute: number; pm: boolean }; // 
 
 const startOfDay = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
 
-// Every day from one month before `value` up to and including `value`'s day. Never later than `value`, so the
-// wheel stays short (about 31 rows) however old the photo's date is.
+// The same day `months` months away, clamped to that month's last day, so e.g. Mar 31 minus one month is
+// Feb 28/29 rather than rolling over to Mar 3.
+const shiftMonths = (date: Date, months: number) => {
+  const lastOfTarget = new Date(date.getFullYear(), date.getMonth() + months + 1, 0).getDate();
+  return new Date(date.getFullYear(), date.getMonth() + months, Math.min(date.getDate(), lastOfTarget)).getTime();
+};
+
+// Every day from one month before `value` to one month after it, but never past today (or past `value` itself,
+// should the photo's clock be ahead). Later days stay reachable, so an edited date can be moved back, while the
+// wheel stays short (at most about 62 rows) however old the photo's date is.
 const dayRange = (value: Date) => {
-  // Clamp to the previous month's last day, so e.g. Mar 31 goes back to Feb 28/29 rather than rolling over to Mar 3.
-  const lastOfPrevMonth = new Date(value.getFullYear(), value.getMonth(), 0).getDate();
-  const first = new Date(
-    value.getFullYear(),
-    value.getMonth() - 1,
-    Math.min(value.getDate(), lastOfPrevMonth),
-  ).getTime();
-  const last = startOfDay(value);
+  const first = shiftMonths(value, -1);
+  const last = Math.max(startOfDay(value), Math.min(shiftMonths(value, 1), todayStart()));
   const days: number[] = [];
   // Step by calendar date rather than adding 24h, so daylight-saving changes don't skip or repeat a day.
   for (let d = new Date(first); d.getTime() <= last; d.setDate(d.getDate() + 1)) days.push(d.getTime());

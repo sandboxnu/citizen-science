@@ -114,6 +114,8 @@ export default function ReportScreen() {
   // null while choosing evidence; otherwise the index into `selectedEvidence` being filled in.
   const [detailsIndex, setDetailsIndex] = useState<number | null>(null);
   const [details, setDetails] = useState<Record<string, EvidenceDetails>>({});
+  // Bumped on reset so updates still in flight from a deleted report (e.g. a slow location lookup) are ignored.
+  const sessionRef = useRef(0);
 
   const canContinue = disasterType !== null && evidence.length > 0;
   const showEvidenceOptions = evidence.length === 0 || searchFocused;
@@ -187,6 +189,7 @@ export default function ReportScreen() {
   };
 
   const resetReport = () => {
+    sessionRef.current += 1;
     setDisasterType(null);
     setTypeExpanded(true);
     setEvidence([]);
@@ -215,6 +218,7 @@ export default function ReportScreen() {
       .filter((e) => e.value !== currentEvidence.value)
       .flatMap((e) => details[e.value]?.photos ?? [])
       .filter((photo, i, all) => all.findIndex((p) => p.uri === photo.uri) === i);
+    const session = sessionRef.current;
     return (
       <>
         <EvidenceDetailsStep
@@ -225,12 +229,13 @@ export default function ReportScreen() {
           totalSteps={selectedEvidence.length}
           details={details[currentEvidence.value] ?? emptyEvidenceDetails()}
           previousPhotos={previousPhotos}
-          onChange={(next) =>
+          onChange={(next) => {
+            if (session !== sessionRef.current) return;
             setDetails((current) => ({
               ...current,
               [currentEvidence.value]: next,
-            }))
-          }
+            }));
+          }}
           onBack={() => setDetailsIndex(detailsIndex === 0 ? null : detailsIndex - 1)}
           onNext={() => {
             if (isLast) handleSubmit();

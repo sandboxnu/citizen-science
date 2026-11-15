@@ -39,6 +39,8 @@ export function getPhotoCoordinates(asset: ImagePickerAsset): Coordinates | null
 
   if (latitude === null || longitude === null) return null;
   if (latitude === 0 && longitude === 0) return null;
+  // Corrupt metadata can hold impossible values; returning null lets the device-location fallback run.
+  if (Math.abs(latitude) > 90 || Math.abs(longitude) > 180) return null;
   return { latitude, longitude };
 }
 
