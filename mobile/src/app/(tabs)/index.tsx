@@ -17,7 +17,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing, UserLocationColors } from '@/constants/theme';
 import { auth } from '@/lib/firebase';
-import { searchPlaces, type PlaceResult } from '@/lib/map-search';
+import { searchPlaces, type PinnedPlace, type PlaceResult } from '@/lib/map-search';
 import { subscribeToNwsAlerts, type NwsAlert } from '@/lib/nws-alerts';
 import { StartReport } from '@/components/start-report';
 import { ACTIVE_DURATION_MS, RecenterButton } from '@/components/recenter-button';
@@ -35,7 +35,6 @@ const DEFAULT_REGION = {
 // Wait for typing to pause before geocoding; the platform geocoder rate-limits.
 const PLACE_SEARCH_DEBOUNCE_MS = 400;
 const MIN_PLACE_QUERY_LENGTH = 2;
-const PLACE_ZOOM_DELTA = 0.02;
 const MAP_ANIMATION_MS = 500;
 
 export default function MapScreen() {
@@ -51,7 +50,7 @@ export default function MapScreen() {
   const [searchOpen, setSearchOpen] = useState(false);
   // Geocoder results tagged with the query they answer, so stale ones are ignored.
   const [placeSearch, setPlaceSearch] = useState<{ query: string; places: PlaceResult[] } | null>(null);
-  const [pinnedPlace, setPinnedPlace] = useState<PlaceResult | null>(null);
+  const [pinnedPlace, setPinnedPlace] = useState<PinnedPlace | null>(null);
   const [pinLoaded, setPinLoaded] = useState(false);
 
   const trimmedQuery = query.trim();
@@ -90,12 +89,14 @@ export default function MapScreen() {
     setSearchOpen(false);
   };
 
-  const selectPlace = (place: PlaceResult) => {
+  const selectPlace = async (place: PlaceResult) => {
     closeSearch();
     setQuery(place.name);
-    setPinnedPlace(place);
+    const pinned = await place.resolve();
+    if (!pinned) return;
+    setPinnedPlace(pinned);
     mapRef.current?.animateToRegion(
-      { ...place.coordinate, latitudeDelta: PLACE_ZOOM_DELTA, longitudeDelta: PLACE_ZOOM_DELTA },
+      { ...pinned.coordinate, latitudeDelta: pinned.zoomDelta, longitudeDelta: pinned.zoomDelta },
       MAP_ANIMATION_MS
     );
   };
@@ -105,8 +106,6 @@ export default function MapScreen() {
     setPinnedPlace(null);
   };
 
-  // Wait for the geocoder to answer so "No results found." doesn't flash while typing.
-  const showResults = searchesPlaces && placesAnswered;
 
   const recenterMap = () => {
     mapRef.current?.animateToRegion({
@@ -177,8 +176,12 @@ export default function MapScreen() {
           onFocusSearch={() => setSearchOpen(true)}
           onClearQuery={clearSearch}
           results={
-            showResults ? (
-              <MapSearchResults places={placeResults} onSelectPlace={selectPlace} />
+            searchesPlaces ? (
+              <MapSearchResults
+                places={placeResults}
+                loading={!placesAnswered}
+                onSelectPlace={selectPlace}
+              />
             ) : undefined
           }
         />

@@ -1,19 +1,26 @@
 import { Image } from 'expo-image';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { FontFamily, MapSearchColors, Spacing } from '@/constants/theme';
 import type { PlaceResult } from '@/lib/map-search';
 
 type MapSearchResultsProps = {
   places: PlaceResult[];
+  // The geocoder hasn't answered the current query yet.
+  loading?: boolean;
   onSelectPlace: (place: PlaceResult) => void;
 };
 
 // Dropdown under the map search bar listing geocoded places.
-export function MapSearchResults({ places, onSelectPlace }: MapSearchResultsProps) {
+export function MapSearchResults({ places, loading, onSelectPlace }: MapSearchResultsProps) {
   return (
     <View style={styles.card}>
-      {places.length === 0 ? (
+      {loading ? (
+        <View style={[styles.row, styles.titleRow]} accessibilityRole="progressbar" accessibilityLabel="Searching">
+          <ActivityIndicator size="small" color={MapSearchColors.subtle} style={styles.icon} />
+          <Text style={[styles.title, styles.loadingText]}>Searching...</Text>
+        </View>
+      ) : places.length === 0 ? (
         <View style={styles.row}>
           <Text style={styles.title}>No results found.</Text>
         </View>
@@ -60,6 +67,7 @@ const styles = StyleSheet.create({
     lineHeight: 17,
     color: MapSearchColors.text,
   },
+  loadingText: { color: MapSearchColors.subtle },
   subtitle: {
     paddingHorizontal: Spacing.eleven,
     fontFamily: FontFamily.regular,
