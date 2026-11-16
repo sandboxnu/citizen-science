@@ -208,19 +208,11 @@ async function searchMapKit(
       resolve: async () => {
         const place = await mapKit.resolve(id).catch(() => null);
         if (!place) return null;
-        const kind: PlaceKind =
-          place.isPointOfInterest || place.hasStreet
-            ? 'address'
-            : place.hasCity
-              ? 'city'
-              : place.hasRegion
-                ? 'region'
-                : 'country';
         return {
           id,
           name: title,
           coordinate: { latitude: place.latitude, longitude: place.longitude },
-          zoomDelta: PLACE_ZOOM_DELTA[kind],
+          zoomDelta: PLACE_ZOOM_DELTA[place.kind],
         };
       },
     }));

@@ -9,9 +9,13 @@ public class PlaceSearchModule: Module {
     Name("PlaceSearch")
 
     AsyncFunction("autocomplete") {
-      (query: String, latitude: Double, longitude: Double, radiusMeters: Double) async throws -> [[String: Any]] in
-      let center = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
-      return try await searcher.autocomplete(query, center: center, radiusMeters: radiusMeters)
+      (query: String, latitude: Double, longitude: Double, radiusMeters: Double) async throws -> [[String: String]] in
+      let region = MKCoordinateRegion(
+        center: CLLocationCoordinate2D(latitude: latitude, longitude: longitude),
+        latitudinalMeters: radiusMeters * 2,
+        longitudinalMeters: radiusMeters * 2
+      )
+      return try await searcher.autocomplete(query, region: region)
     }
 
     AsyncFunction("resolve") { (id: String) async throws -> [String: Any]? in
@@ -20,21 +24,28 @@ public class PlaceSearchModule: Module {
   }
 }
 
+// MapKit must be used on the main thread.
 @MainActor private let searcher = PlaceSearcher()
 
-// Rows handed to JS are kept here so `resolve` can find them by id. Older batches stay valid
-// (a slow, stale search can't break the current rows) until the cache is trimmed.
 private let maxCachedRows = 200
 
 @MainActor
 private final class PlaceSearcher: NSObject, @preconcurrency MKLocalSearchCompleterDelegate {
+  // What a row in the JS results list stands for: a type-ahead suggestion (no coordinate until
+  // looked up) or a full-search result (already has one).
+  private enum CachedRow {
+    case suggestion(MKLocalSearchCompletion)
+    case place(MKMapItem)
+  }
+
+  // Every row handed to JS, by its id, so `resolve` can find the place behind a tapped row. Each
+  // row gets a fresh id, so tapping a row from an older search still finds its own place.
+  private var cachedRowsById: [String: CachedRow] = [:]
+  private var nextRowId = 0
+
   private let completer = MKLocalSearchCompleter()
+  // The `autocomplete` call waiting on the completer's answer.
   private var pending: CheckedContinuation<[MKLocalSearchCompletion], Never>?
-  private var batch = 0
-  // Type-ahead suggestions only get a coordinate once looked up.
-  private var suggestions: [String: MKLocalSearchCompletion] = [:]
-  // Full-search results already have one.
-  private var mapItems: [String: MKMapItem] = [:]
 
   override init() {
     super.init()
@@ -42,27 +53,14 @@ private final class PlaceSearcher: NSObject, @preconcurrency MKLocalSearchComple
     completer.resultTypes = [.address, .pointOfInterest]
   }
 
-  // Throws only when the search itself fails (offline, service error); no matches is [].
-  func autocomplete(_ query: String, center: CLLocationCoordinate2D, radiusMeters: Double) async throws -> [[String: Any]] {
-    let region = MKCoordinateRegion(
-      center: center,
-      latitudinalMeters: radiusMeters * 2,
-      longitudinalMeters: radiusMeters * 2
-    )
-    batch += 1
-    let batchId = batch
-    if suggestions.count + mapItems.count > maxCachedRows {
-      suggestions.removeAll()
-      mapItems.removeAll()
-    }
+  /// Call as the user types. Text rows only (no coordinates), each cached by id for `resolve`.
+  /// [] if nothing matches; throws if the search fails.
+  func autocomplete(_ query: String, region: MKCoordinateRegion) async throws -> [[String: String]] {
+    if cachedRowsById.count > maxCachedRows { cachedRowsById.removeAll() }
 
     let completions = await complete(query, region: region)
     if !completions.isEmpty {
-      return completions.enumerated().map { index, completion in
-        let id = "c\(batchId)-\(index)"
-        suggestions[id] = completion
-        return ["id": id, "title": completion.title, "subtitle": completion.subtitle]
-      }
+      return completions.map { cacheRow(.suggestion($0), title: $0.title, subtitle: $0.subtitle) }
     }
 
     // Type-ahead only matches what's typed; the full search corrects misspellings
@@ -71,35 +69,53 @@ private final class PlaceSearcher: NSObject, @preconcurrency MKLocalSearchComple
     request.naturalLanguageQuery = query
     request.region = region
     request.resultTypes = [.address, .pointOfInterest]
-    let response: MKLocalSearch.Response
+    return try await search(request).map {
+      cacheRow(.place($0), title: $0.name ?? query, subtitle: Self.address(of: $0.placemark))
+    }
+  }
+
+  /// Call once, for the tapped row. Its coordinate and kind; type-ahead rows need one lookup.
+  /// nil if not found; throws if the lookup fails.
+  func resolve(_ id: String) async throws -> [String: Any]? {
+    switch cachedRowsById[id] {
+    case .place(let item):
+      return Self.describe(item)
+    case .suggestion(let completion):
+      return try await search(MKLocalSearch.Request(completion: completion)).first.map(Self.describe)
+    case nil:
+      return nil
+    }
+  }
+
+  // Caches the row under a new id and returns what JS shows for it.
+  private func cacheRow(_ row: CachedRow, title: String, subtitle: String) -> [String: String] {
+    nextRowId += 1
+    let id = String(nextRowId)
+    cachedRowsById[id] = row
+    return ["id": id, "title": title, "subtitle": subtitle]
+  }
+
+  // MKLocalSearch reports "nothing found" as an error; treat it as no results.
+  private func search(_ request: MKLocalSearch.Request) async throws -> [MKMapItem] {
     do {
-      response = try await MKLocalSearch(request: request).start()
+      return try await MKLocalSearch(request: request).start().mapItems
     } catch let error as MKError where error.code == .placemarkNotFound {
       return []
     }
-    return response.mapItems.enumerated().map { index, item in
-      let id = "s\(batchId)-\(index)"
-      mapItems[id] = item
-      return ["id": id, "title": item.name ?? query, "subtitle": Self.address(of: item.placemark)]
-    }
   }
 
-  func resolve(_ id: String) async throws -> [String: Any]? {
-    if let item = mapItems[id] { return Self.describe(item) }
-    guard let completion = suggestions[id] else { return nil }
-    let response = try await MKLocalSearch(request: MKLocalSearch.Request(completion: completion)).start()
-    return response.mapItems.first.map(Self.describe)
-  }
-
+  // Coordinate plus how specific the place is, which sets how far the map zooms in.
   private static func describe(_ item: MKMapItem) -> [String: Any] {
     let placemark = item.placemark
+    let kind =
+      item.pointOfInterestCategory != nil || placemark.thoroughfare != nil ? "address"
+      : placemark.locality != nil ? "city"
+      : placemark.administrativeArea != nil ? "region"
+      : "country"
     return [
       "latitude": placemark.coordinate.latitude,
       "longitude": placemark.coordinate.longitude,
-      "isPointOfInterest": item.pointOfInterestCategory != nil,
-      "hasStreet": placemark.thoroughfare != nil,
-      "hasCity": placemark.locality != nil,
-      "hasRegion": placemark.administrativeArea != nil,
+      "kind": kind,
     ]
   }
 
@@ -112,14 +128,14 @@ private final class PlaceSearcher: NSObject, @preconcurrency MKLocalSearchComple
       .joined(separator: ", ")
   }
 
-  // MKLocalSearchCompleter is delegate-based; this turns one query into one awaited answer. A
-  // newer query answers the pending one with [] so stale callers never hang.
+  // The completer answers through the delegate methods below rather than returning results, so
+  // this waits for that answer. A newer query answers the waiting one with [] so it never hangs.
   private func complete(_ query: String, region: MKCoordinateRegion) async -> [MKLocalSearchCompletion] {
     finish([])
     return await withCheckedContinuation { continuation in
       pending = continuation
       completer.region = region
-      completer.queryFragment = query
+      completer.queryFragment = query  // starts the search
     }
   }
 
