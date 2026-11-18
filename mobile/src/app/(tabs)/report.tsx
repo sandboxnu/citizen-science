@@ -11,11 +11,17 @@ import {
   EvidenceDetailsStep,
 } from '@/components/report/evidence-details-step';
 import { CloseReportButton } from '@/components/report/close-report-button';
+import { ReportSuccess } from '@/components/report/report-success';
 import { FontFamily, ReportColors, Spacing } from '@/constants/theme';
+import { useAuth } from '@/lib/auth-context';
 import {
+  type Concern,
+  deleteReportPhotos,
   isKnownConcernType,
   type KnownConcernType,
+  submitPostDisasterReport,
   toConcernType,
+  uploadReportPhoto,
 } from '@/lib/reports';
 
 type DisasterType = 'flooding';
@@ -101,6 +107,7 @@ const EVIDENCE_OPTIONS: Record<DisasterType, EvidenceOption[]> = {
 
 export default function ReportScreen() {
   const router = useRouter();
+  const { user } = useAuth();
   const [showWarning, setShowWarning] = useState(true);
   const [typeExpanded, setTypeExpanded] = useState(true);
   const [disasterType, setDisasterType] = useState<DisasterType | null>(null);
@@ -116,6 +123,8 @@ export default function ReportScreen() {
   const [details, setDetails] = useState<Record<string, EvidenceDetails>>({});
   // Bumped on reset so updates still in flight from a deleted report (e.g. a slow location lookup) are ignored.
   const sessionRef = useRef(0);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
   const canContinue = disasterType !== null && evidence.length > 0;
   const showEvidenceOptions = evidence.length === 0 || searchFocused;
@@ -198,9 +207,74 @@ export default function ReportScreen() {
     setDetailsIndex(null);
   };
 
-  // Submitting isn't wired up to the backend yet.
-  const handleSubmit = () => {
-    Alert.alert('Not available yet', 'Submitting reports is not implemented yet.');
+  const handleSubmit = async () => {
+    if (!user || !disasterType || submitting) return;
+    // Every concern carries its own location and time, so each one needs both before submitting.
+    const evidenceDetails = selectedEvidence.flatMap((e) => {
+      const d = details[e.value];
+      return d?.location && d.observedAt ? [{ evidence: e, details: d, location: d.location, observedAt: d.observedAt }] : [];
+    });
+    if (evidenceDetails.length === 0 || evidenceDetails.length !== selectedEvidence.length) return;
+
+    setSubmitting(true);
+    const uploadedPaths: string[] = [];
+    const uploads = new Map<string, Promise<string>>();
+    try {
+      const uploadOnce = (uri: string) => {
+        let upload = uploads.get(uri);
+        if (!upload) {
+          upload = uploadReportPhoto(user.uid, uri).then(({ url, path }) => {
+            uploadedPaths.push(path);
+            return url;
+          });
+          uploads.set(uri, upload);
+        }
+        return upload;
+      };
+
+      const concerns: Concern[] = await Promise.all(
+        evidenceDetails.map(async ({ evidence: e, details: d, location, observedAt }) => {
+          const description = d.description.trim();
+          return {
+            type: isCustomEvidence(e.value) ? toConcernType(e.title) : e.value,
+            latitude: location.latitude,
+            longitude: location.longitude,
+            locationSource: d.locationSource,
+            observedAt: observedAt.toISOString(),
+            observedAtSource: d.observedAtSource,
+            damageRating: d.damageRating ?? 1,
+            ...(description && { description }),
+            photoUrls: await Promise.all(
+              d.photos.map(async (photo) => ({
+                url: await uploadOnce(photo.uri),
+                latitude: photo.latitude,
+                longitude: photo.longitude,
+              })),
+            ),
+          };
+        }),
+      );
+
+      await submitPostDisasterReport({
+        userId: user.uid,
+        disasterType,
+        concerns,
+      });
+      setSubmitted(true);
+    } catch (err) {
+      console.error('Failed to submit report', err);
+      await Promise.allSettled(uploads.values());
+      deleteReportPhotos(uploadedPaths);
+      Alert.alert('Couldn’t submit report', 'Something went wrong. Check your connection and try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleSuccessDone = () => {
+    setSubmitted(false);
+    resetReport();
+    router.navigate('/');
   };
 
   const deleteModal = (
@@ -210,6 +284,8 @@ export default function ReportScreen() {
       onDelete={handleDeleteReport}
     />
   );
+
+  if (submitted) return <ReportSuccess onDone={handleSuccessDone} />;
 
   const currentEvidence = detailsIndex !== null ? selectedEvidence[detailsIndex] : undefined;
   if (currentEvidence && detailsIndex !== null) {
@@ -229,6 +305,7 @@ export default function ReportScreen() {
           totalSteps={selectedEvidence.length}
           details={details[currentEvidence.value] ?? emptyEvidenceDetails()}
           previousPhotos={previousPhotos}
+          submitting={submitting}
           onChange={(next) => {
             if (session !== sessionRef.current) return;
             setDetails((current) => ({

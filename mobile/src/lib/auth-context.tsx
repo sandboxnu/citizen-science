@@ -8,6 +8,9 @@ type AuthContextValue = {
   initializing: boolean;
 };
 
+// Module-level so it survives remounts but resets on a cold start of the app.
+let launchSessionCleared = false;
+
 const AuthContext = createContext<AuthContextValue>({ user: null, initializing: true });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -16,19 +19,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     return onAuthStateChanged(auth, async (nextUser) => {
-      if (nextUser) {
-        // The emulator wipes its accounts on restart, but the device keeps the cached session.
-        // Reloading fails for an account that no longer exists, so sign out instead of leaving a
-        // signed-in user with no profile.
-        try {
-          await nextUser.reload();
-        } catch (err) {
-          if ((err as { code?: string }).code === 'auth/user-not-found') {
-            await signOut(auth);
-            return;
-          }
-        }
+      // Firebase restores the previous session from device storage on launch. Clear it once per
+      // cold start so opening the app always lands on the sign-in flow. The sign-out triggers
+      // this listener again with a null user, which finishes initializing.
+      if (nextUser && !launchSessionCleared) {
+        launchSessionCleared = true;
+        await signOut(auth);
+        return;
       }
+      launchSessionCleared = true;
       setUser(nextUser);
       setInitializing(false);
     });

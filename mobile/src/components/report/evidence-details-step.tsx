@@ -115,6 +115,7 @@ export function EvidenceDetailsStep({
   // iOS can't present a picker or another modal until the current one has finished dismissing.
   const afterDismiss = useRef<(() => void) | null>(null);
 
+  const nextLabel = step === totalSteps ? 'Submit' : 'Next';
   const canContinue = isEvidenceDetailsComplete(details) && !loadingPhotos && !submitting;
   const remaining = MAX_PHOTOS - details.photos.length;
   const availablePrevious = previousPhotos.filter((p) => !details.photos.some((own) => own.uri === p.uri));
@@ -362,12 +363,12 @@ export function EvidenceDetailsStep({
           onPress={onNext}
           disabled={!canContinue}
           accessibilityRole="button"
-          accessibilityLabel={submitting ? 'Submitting report' : 'Next'}
+          accessibilityLabel={submitting ? 'Submitting report' : nextLabel}
           accessibilityState={{ disabled: !canContinue, busy: submitting }}>
           {submitting ? (
             <ActivityIndicator color={ReportColors.onPrimary} />
           ) : (
-            <Text style={styles.nextText}>Next</Text>
+            <Text style={styles.nextText}>{nextLabel}</Text>
           )}
         </Pressable>
       </View>
