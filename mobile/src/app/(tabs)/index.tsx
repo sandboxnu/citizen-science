@@ -1,10 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { useEffect, useRef, useState, type ComponentRef } from 'react';
+import { Image } from 'expo-image';
+import { Keyboard, StyleSheet, TextInput, View } from 'react-native';
 import MapView, { Circle, Marker, Polygon } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AlertSheet } from '@/components/alert-sheet';
 import { MapFilterBar } from '@/components/map-filter-bar';
+import { MapSearchResults } from '@/components/map-search-results';
 import {
   DEFAULT_MAP_OVERLAY_FILTERS,
   MapOverlaySheet,
@@ -14,6 +16,7 @@ import { TimeframePopup } from '@/components/timeframe-popup';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing, UserLocationColors } from '@/constants/theme';
+import { searchPlaces, type PinnedPlace, type PlaceResult } from '@/lib/map-search';
 import { subscribeToNwsAlerts, type NwsAlert } from '@/lib/nws-alerts';
 import { DEFAULT_TIMEFRAME, isInTimeframe, type Timeframe } from '@/lib/timeframe';
 import { StartReport } from '@/components/start-report';
@@ -29,6 +32,14 @@ const DEFAULT_REGION = {
   longitudeDelta: 0.05,
 };
 
+// Wait for typing to pause before geocoding; the platform geocoder rate-limits.
+const PLACE_SEARCH_DEBOUNCE_MS = 400;
+const MIN_PLACE_QUERY_LENGTH = 2;
+const MAP_ANIMATION_MS = 500;
+// location-pin.svg is drawn at 24 x 32.27 with its tip at the bottom center.
+const PIN_WIDTH = 24;
+const PIN_HEIGHT = 32.27;
+
 export default function MapScreen() {
   const [nwsAlerts, setNwsAlerts] = useState<NwsAlert[]>([]);
   const [error, setError] = useState(false);
@@ -38,6 +49,43 @@ export default function MapScreen() {
   const [timeframe, setTimeframe] = useState<Timeframe>(DEFAULT_TIMEFRAME);
   const [timeframePopupOpen, setTimeframePopupOpen] = useState(false);
   const mapRef = useRef<MapView>(null);
+
+  const searchInputRef = useRef<ComponentRef<typeof TextInput>>(null);
+  const [query, setQuery] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
+  // Search results tagged with the query they answer, so stale ones are ignored. `places` is
+  // null when the search failed (offline, service error), as opposed to [] for no matches.
+  const [placeSearch, setPlaceSearch] = useState<{ query: string; places: PlaceResult[] | null } | null>(
+    null
+  );
+  // Bumped by "Try again" to rerun a failed search for the same query.
+  const [searchAttempt, setSearchAttempt] = useState(0);
+  const [pinnedPlace, setPinnedPlace] = useState<PinnedPlace | null>(null);
+  const [pinLoaded, setPinLoaded] = useState(false);
+
+  const trimmedQuery = query.trim();
+  const searchesPlaces = searchOpen && trimmedQuery.length >= MIN_PLACE_QUERY_LENGTH;
+  const placesAnswered = placeSearch?.query === trimmedQuery;
+  const placeResults = searchesPlaces && placesAnswered ? placeSearch.places : [];
+  const searchFailed = placeResults === null;
+
+  useEffect(() => {
+    if (!searchesPlaces) return;
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      const places = await searchPlaces(trimmedQuery, MOCK_USER_LOCATION);
+      if (!cancelled) setPlaceSearch({ query: trimmedQuery, places });
+    }, PLACE_SEARCH_DEBOUNCE_MS);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [searchesPlaces, trimmedQuery, searchAttempt]);
+
+  const retrySearch = () => {
+    setPlaceSearch(null);
+    setSearchAttempt((attempt) => attempt + 1);
+  };
 
   useEffect(
     () =>
@@ -50,6 +98,30 @@ export default function MapScreen() {
       ),
     []
   );
+
+  const closeSearch = () => {
+    Keyboard.dismiss();
+    searchInputRef.current?.blur();
+    setSearchOpen(false);
+  };
+
+  const selectPlace = async (place: PlaceResult) => {
+    closeSearch();
+    setQuery(place.name);
+    const pinned = await place.resolve();
+    if (!pinned) return;
+    setPinnedPlace(pinned);
+    mapRef.current?.animateToRegion(
+      { ...pinned.coordinate, latitudeDelta: pinned.zoomDelta, longitudeDelta: pinned.zoomDelta },
+      MAP_ANIMATION_MS
+    );
+  };
+
+  const clearSearch = () => {
+    setQuery('');
+    setPinnedPlace(null);
+  };
+
 
   const recenterMap = () => {
     mapRef.current?.animateToRegion({
@@ -64,6 +136,7 @@ export default function MapScreen() {
         ref={mapRef}
         style={styles.map}
         initialRegion={DEFAULT_REGION}
+        onPress={() => searchOpen && closeSearch()}
       >
         {(overlayFilters.flooding ? nwsAlerts.filter((alert) => isInTimeframe(alert.sent, timeframe)) : []).flatMap((alert) =>
           alert.polygons.map((polygon, i) => (
@@ -89,6 +162,23 @@ export default function MapScreen() {
         <Marker coordinate={MOCK_USER_LOCATION} anchor={{ x: 0.5, y: 0.5 }} tracksViewChanges={false}>
           <View style={styles.userDot} />
         </Marker>
+        {pinnedPlace && (
+          <Marker
+            key={pinnedPlace.id}
+            coordinate={pinnedPlace.coordinate}
+            // Put the pin's tip on the place: `anchor` for Google Maps (Android),
+            // `centerOffset` for Apple Maps (iOS), which ignores `anchor`.
+            anchor={{ x: 0.5, y: 1 }}
+            centerOffset={{ x: 0, y: -PIN_HEIGHT / 2 }}
+            tracksViewChanges={!pinLoaded}
+            accessibilityLabel={pinnedPlace.name}>
+            <Image
+              source={require('@/assets/images/mapIcons/location-pin.svg')}
+              style={styles.locationPin}
+              onLoad={() => setPinLoaded(true)}
+            />
+          </Marker>
+        )}
       </MapView>
 
       <SafeAreaView style={styles.overlay} edges={['top']} pointerEvents="box-none">
@@ -99,6 +189,27 @@ export default function MapScreen() {
           onOpenTimeframe={() => setTimeframePopupOpen(true)}
           onChange={setOverlayFilters}
           onTimeframeChange={setTimeframe}
+          inputRef={searchInputRef}
+          query={query}
+          onChangeQuery={(text) => {
+            setQuery(text);
+            setSearchOpen(true);
+            // Erasing the query by keyboard removes the pin, like the clear button.
+            if (!text) setPinnedPlace(null);
+          }}
+          onFocusSearch={() => setSearchOpen(true)}
+          onClearQuery={clearSearch}
+          results={
+            searchesPlaces ? (
+              <MapSearchResults
+                places={placeResults ?? []}
+                loading={!placesAnswered}
+                failed={searchFailed}
+                onRetry={retrySearch}
+                onSelectPlace={selectPlace}
+              />
+            ) : undefined
+          }
         />
         {error && (
           <ThemedText type="small" themeColor="textSecondary">
@@ -145,6 +256,7 @@ const styles = StyleSheet.create({
     borderWidth: 4,
     borderColor: UserLocationColors.dotBorder,
   },
+  locationPin: { width: PIN_WIDTH, height: PIN_HEIGHT },
   overlay: {
     position: 'absolute',
     top: 0,

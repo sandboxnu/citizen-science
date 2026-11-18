@@ -1,5 +1,5 @@
 import { Image, type ImageSource } from 'expo-image';
-import { useEffect, useRef, type ComponentRef } from 'react';
+import { useEffect, useRef, type ComponentRef, type ReactNode, type Ref } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import type { MapOverlayFilters } from '@/components/map-overlay-sheet';
@@ -13,8 +13,16 @@ type MapFilterBarProps = {
   onOpenTimeframe: () => void;
   onChange: (filters: MapOverlayFilters) => void;
   onTimeframeChange: (timeframe: Timeframe) => void;
+  query: string;
+  onChangeQuery: (query: string) => void;
+  onFocusSearch: () => void;
+  onClearQuery: () => void;
+  inputRef?: Ref<ComponentRef<typeof TextInput>>;
+  // Search results dropdown. When present it replaces the chips.
+  results?: ReactNode;
 };
 
+// Search bar plus the filter chips that float over the top of the map.
 export function MapFilterBar({
   filters,
   timeframe,
@@ -22,7 +30,14 @@ export function MapFilterBar({
   onOpenTimeframe,
   onChange,
   onTimeframeChange,
+  query,
+  onChangeQuery,
+  onFocusSearch,
+  onClearQuery,
+  inputRef,
+  results,
 }: MapFilterBarProps) {
+  // The "Map Overlay" chip turns blue whenever any disaster overlay is on.
   const anyActive = Object.values(filters).some(Boolean);
   const timeframeActive = !isDefaultTimeframe(timeframe);
 
@@ -36,86 +51,98 @@ export function MapFilterBar({
   }, [tagCount]);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, results ? styles.containerWithResults : null]}>
       <View style={styles.search}>
         <Image source={require('@/assets/images/mapIcons/search.svg')} style={styles.icon} />
         <TextInput
+          ref={inputRef}
           style={styles.searchInput}
-          placeholder="Search incident, address, or place..."
+          value={query}
+          onChangeText={onChangeQuery}
+          onFocus={onFocusSearch}
+          autoCorrect={false}
+          placeholder="Search address or place..."
           placeholderTextColor={MapOverlayColors.searchPlaceholder}
           returnKeyType="search"
           accessibilityLabel="Search"
         />
+        {query.length > 0 && (
+          <Pressable onPress={onClearQuery} hitSlop={12} accessibilityRole="button" accessibilityLabel="Clear search">
+            <Image source={require('@/assets/images/mapIcons/cancel.svg')} style={styles.icon} />
+          </Pressable>
+        )}
       </View>
 
-      <ScrollView
-        horizontal
-        ref={scrollRef}
-        showsHorizontalScrollIndicator={false}
-        onContentSizeChange={() => {
-          if (!scrollToEndPending.current) return;
-          scrollToEndPending.current = false;
-          scrollRef.current?.scrollToEnd({ animated: true });
-        }}
-        style={styles.chipsScroll}
-        contentContainerStyle={styles.chips}>
-        <Chip
-          label="Timeframe"
-          active={timeframeActive}
-          icon={
-            timeframeActive
-              ? require('@/assets/images/mapIcons/timer-light.svg')
-              : require('@/assets/images/mapIcons/timer-dark.svg')
-          }
-          trailingIcon={
-            timeframeActive
-              ? require('@/assets/images/mapIcons/chevron-down-light.svg')
-              : require('@/assets/images/mapIcons/chevron-down-dark.svg')
-          }
-          onPress={onOpenTimeframe}
-          accessibilityLabel="Open timeframe filter"
-        />
-        <Chip
-          label="Map Overlay"
-          active={anyActive}
-          icon={
-            anyActive
-              ? require('@/assets/images/mapIcons/layers-light.svg')
-              : require('@/assets/images/mapIcons/layers-dark.svg')
-          }
-          trailingIcon={
-            anyActive
-              ? require('@/assets/images/mapIcons/chevron-down-light.svg')
-              : require('@/assets/images/mapIcons/chevron-down-dark.svg')
-          }
-          onPress={onOpenOverlay}
-          accessibilityLabel="Open map overlay filters"
-        />
-        {timeframeActive && (
+      {results ?? (
+        <ScrollView
+          horizontal
+          ref={scrollRef}
+          showsHorizontalScrollIndicator={false}
+          onContentSizeChange={() => {
+            if (!scrollToEndPending.current) return;
+            scrollToEndPending.current = false;
+            scrollRef.current?.scrollToEnd({ animated: true });
+          }}
+          style={styles.chipsScroll}
+          contentContainerStyle={styles.chips}>
           <Chip
-            label={timeframeLabel(timeframe)}
-            active
-            icon={require('@/assets/images/mapIcons/timer-light.svg')}
-            trailingIcon={require('@/assets/images/mapIcons/close.svg')}
+            label="Timeframe"
+            active={timeframeActive}
+            icon={
+              timeframeActive
+                ? require('@/assets/images/mapIcons/timer-light.svg')
+                : require('@/assets/images/mapIcons/timer-dark.svg')
+            }
+            trailingIcon={
+              timeframeActive
+                ? require('@/assets/images/mapIcons/chevron-down-light.svg')
+                : require('@/assets/images/mapIcons/chevron-down-dark.svg')
+            }
             onPress={onOpenTimeframe}
             accessibilityLabel="Open timeframe filter"
-            onTrailingPress={() => onTimeframeChange(DEFAULT_TIMEFRAME)}
-            trailingAccessibilityLabel="Remove timeframe filter"
           />
-        )}
-        {filters.flooding && (
           <Chip
-            label="Flooding"
-            active
-            icon={require('@/assets/images/mapIcons/waves.svg')}
-            trailingIcon={require('@/assets/images/mapIcons/close.svg')}
+            label="Map Overlay"
+            active={anyActive}
+            icon={
+              anyActive
+                ? require('@/assets/images/mapIcons/layers-light.svg')
+                : require('@/assets/images/mapIcons/layers-dark.svg')
+            }
+            trailingIcon={
+              anyActive
+                ? require('@/assets/images/mapIcons/chevron-down-light.svg')
+                : require('@/assets/images/mapIcons/chevron-down-dark.svg')
+            }
             onPress={onOpenOverlay}
             accessibilityLabel="Open map overlay filters"
-            onTrailingPress={() => onChange({ ...filters, flooding: false })}
-            trailingAccessibilityLabel="Remove flooding overlay"
           />
-        )}
-      </ScrollView>
+          {timeframeActive && (
+            <Chip
+              label={timeframeLabel(timeframe)}
+              active
+              icon={require('@/assets/images/mapIcons/timer-light.svg')}
+              trailingIcon={require('@/assets/images/mapIcons/close.svg')}
+              onPress={onOpenTimeframe}
+              accessibilityLabel="Open timeframe filter"
+              onTrailingPress={() => onTimeframeChange(DEFAULT_TIMEFRAME)}
+              trailingAccessibilityLabel="Remove timeframe filter"
+            />
+          )}
+          {filters.flooding && (
+            <Chip
+              label="Flooding"
+              active
+              icon={require('@/assets/images/mapIcons/waves.svg')}
+              trailingIcon={require('@/assets/images/mapIcons/close.svg')}
+              onPress={onOpenOverlay}
+              accessibilityLabel="Open map overlay filters"
+              onTrailingPress={() => onChange({ ...filters, flooding: false })}
+              trailingAccessibilityLabel="Remove flooding overlay"
+            />
+          )}
+        </ScrollView>
+      )}
     </View>
   );
 }
@@ -185,6 +212,7 @@ function Chip({
 
 const styles = StyleSheet.create({
   container: { gap: Spacing.two },
+  containerWithResults: { gap: Spacing.one },
   search: {
     height: 40,
     flexDirection: 'row',
