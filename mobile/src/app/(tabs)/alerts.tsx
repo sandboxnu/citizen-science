@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AlertItem } from '@/components/alert-item';
 import { ThemedView } from '@/components/themed-view';
 import { AlertItemColors, FontFamily, Spacing } from '@/constants/theme';
-import { MOCK_USER_LOCATION, MOCK_LOCATION_ACCURACY_METERS } from './index';
+import { MOCK_LOCATION_ACCURACY_METERS, MOCK_USER_LOCATION } from '@/constants/mock-location';
 import { fetchHazardZones, isLocationInHazardZone, HazardZone } from '@/lib/hazard-zones';
 
 const activeBoundaryAlert = {

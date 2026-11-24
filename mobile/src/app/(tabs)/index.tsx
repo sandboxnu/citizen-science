@@ -1,5 +1,3 @@
-import { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
 import { useEffect, useRef, useState, type ComponentRef } from 'react';
 import { Image } from 'expo-image';
 import { Keyboard, StyleSheet, TextInput, View } from 'react-native';
@@ -17,18 +15,14 @@ import {
 import { TimeframePopup } from '@/components/timeframe-popup';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
-import { fetchHazardZones, type HazardZone } from '@/lib/hazard-zones';
+import { MOCK_LOCATION_ACCURACY_METERS, MOCK_USER_LOCATION } from '@/constants/mock-location';
 import { Spacing, UserLocationColors } from '@/constants/theme';
+import { fetchHazardZones, type HazardZone } from '@/lib/hazard-zones';
 import { searchPlaces, type PinnedPlace, type PlaceResult } from '@/lib/map-search';
 import { subscribeToNwsAlerts, type NwsAlert } from '@/lib/nws-alerts';
 import { DEFAULT_TIMEFRAME, isInTimeframe, type Timeframe } from '@/lib/timeframe';
 import { StartReport } from '@/components/start-report';
 import { ACTIVE_DURATION_MS, RecenterButton } from '@/components/recenter-button';
-
-// Richards Hall, Northeastern University.
-const MOCK_USER_LOCATION = { latitude: 42.3399, longitude: -71.0889 };
-const MOCK_LOCATION_ACCURACY_METERS = 93;
 
 const DEFAULT_REGION = {
   ...MOCK_USER_LOCATION,
@@ -63,6 +57,7 @@ export default function MapScreen() {
       isMounted = false;
     };
   }, []);
+
   const [timeframe, setTimeframe] = useState<Timeframe>(DEFAULT_TIMEFRAME);
   const [timeframePopupOpen, setTimeframePopupOpen] = useState(false);
   const mapRef = useRef<MapView>(null);
