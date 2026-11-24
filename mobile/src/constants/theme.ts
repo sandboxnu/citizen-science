@@ -48,6 +48,19 @@ export const AlertSheetColors = {
   lastUpdatedDot: '#2F6FDB',
 } as const;
 
+// Notification list item (boundary / flood alerts) palette from the SIGHTLINE Figma handoff.
+export const AlertItemColors = {
+  screenTitle: '#054A91',
+  background: '#FFFFFF',
+  unreadBackground: '#F3F9FF',
+  border: '#B9B9B9',
+  iconBackground: '#054A91',
+  title: '#022D59',
+  timestamp: '#86827D',
+  floodMessage: '#110D07',
+  boundaryMessage: '#271F16',
+} as const;
+
 // Map overlay filter sheet palette from the SIGHTLINE Figma handoff.
 export const MapOverlayColors = {
   background: '#FFFFFF',
