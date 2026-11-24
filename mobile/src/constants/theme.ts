@@ -81,7 +81,45 @@ export const MapOverlayColors = {
   chipActiveText: '#FEFFFF',
   chipInactive: '#FEFFFF',
   chipInactiveText: '#271F16',
+  inputText: '#110D07',
+  bodySubtle: '#4B443B',
+  subtle: '#86827D',
+  rangeBand: '#DEEFFE',
+  error: '#E0672A',
 } as const;
+
+// Map search results dropdown from the SIGHTLINE Figma handoff.
+export const MapSearchColors = {
+  card: '#FEFFFF',
+  text: '#271F16',
+  subtle: '#86827D',
+  divider: '#EEEEEE',
+  action: '#0069D5',
+} as const;
+
+// Start Report button
+export const StartReportColors = {
+  background: '#054A91',
+  text: '#FFFFFF',
+} as const;
+
+// Recenter (my location) map button
+export const RecenterButtonColors = {
+  background: '#FEFFFF',
+  activeBackground: '#0069D5',
+  shadow: 'rgba(0,0,0,0.25)',
+} as const;
+
+// User location dot + accuracy radius from the SIGHTLINE Figma handoff ("User Location").
+// Figma draws the halo as a #358FEC radial gradient (100% -> 45% alpha) at 50% layer opacity;
+// map circles can't take gradients, so the fill is the area-weighted average of that gradient.
+export const UserLocationColors = {
+  dot: '#054A91',
+  dotBorder: '#FEFFFF',
+  radiusFill: 'rgba(53,143,236,0.32)',
+  radiusStroke: 'rgba(0,105,213,0.5)',
+} as const;
+
 
 // Auth screens (landing, sign in, sign up) palette from the SIGHTLINE Figma handoff.
 export const AuthColors = {
@@ -123,6 +161,46 @@ export const ProfileColors = {
   backdrop: 'rgba(28,43,74,0.45)',
   dialogText: '#000',
   dialogMessageText: '#271F16'
+} as const;
+
+// Disaster evidence report form palette from the SIGHTLINE Figma handoff.
+export const ReportColors = {
+  background: '#FFFFFF',
+  title: '#054A91', 
+  text: '#4B443B',
+  required: '#E75A0E',
+  warningText: '#E75A0E',
+  warningBackground: '#FEFFFF',
+  warningBorder: '#FFC9AD',
+  cardBorder: '#EEEEEE',
+  chevron: '#86827D',
+  tileBorder: '#B9B9B9',
+  tileIcon: '#271F16',
+  tileText: '#86827D',
+  tileSelectedBorder: '#B9B9B9',
+  tileSelectedBackground: '#DEEFFE',
+  tileSelectedText: '#86827D', 
+  cancelText: '#86827D',
+  primary: '#054A91',
+  onPrimary: '#F3F9FF',
+  disabled: '#BDBDBD',
+  onDisabled: '#FFFFFF',
+  destructive: '#E0672A',
+  modalText: '#000000',
+  overlay: 'rgba(0, 0, 0, 0.45)',
+  // Evidence details flow
+  primaryActive: '#022D59',
+  primaryLight: '#0069D5',
+  secondary: '#BBDEFF',
+  secondaryContainer: '#DEEFFE',
+  secondaryActive: '#358FEC',
+  textPrimary: '#110D07',
+  surface: '#FEFFFF',
+  sliderTrack: '#EEEEEE',
+  sheetHandle: '#BABABA',
+  sheetOverlay: 'rgba(0, 0, 0, 0.4)',
+  photoBadge: 'rgba(0, 0, 0, 0.5)',
+  photoBadgeBorder: '#F3F9FF',
 } as const;
 
 // Severity chip colors, keyed by NWS `severity`.

@@ -1,11 +1,21 @@
 rules_version = '2';
 
-// No feature uses Storage yet (mobile/src/lib/firebase.ts initializes it but
-// nothing uploads). Deny by default until a real feature needs it — when it
-// does, scope rules to that path with auth + ownership checks, the same way
-// firestore.rules scopes reports/{reportId} to request.auth.uid.
 service firebase.storage {
   match /b/{bucket}/o {
+    // Report photos, uploaded by mobile/src/lib/reports.ts's uploadReportPhoto() before the report doc is
+    // written. Each user can only write, read and delete photos under their own folder. Files can't be
+    // overwritten, so an uploaded photo stays the one a report's URL points to. (Download URLs carry their own
+    // token, so anyone holding a report's URL can still view the photo.)
+    match /reports/{userId}/{fileName} {
+      allow read, delete: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.size < 20 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow update: if false;
+    }
+
+    // Everything else is denied until a feature needs it.
     match /{allPaths=**} {
       allow read, write: if false;
     }
