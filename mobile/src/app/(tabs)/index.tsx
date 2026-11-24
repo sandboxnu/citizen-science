@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { signOut } from '@react-native-firebase/auth';
 import { StyleSheet, View } from 'react-native';
 import MapView, { Circle, Marker, Polygon } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,12 +13,12 @@ import {
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
-import { auth } from '@/lib/firebase';
+import { fetchHazardZones, type HazardZone } from '@/lib/hazard-zones';
 import { subscribeToNwsAlerts, type NwsAlert } from '@/lib/nws-alerts';
 
 // Richards Hall, Northeastern University.
-const MOCK_USER_LOCATION = { latitude: 42.3399, longitude: -71.0889 };
-const MOCK_LOCATION_ACCURACY_METERS = 30;
+export const MOCK_USER_LOCATION = { latitude: 42.3399, longitude: -71.0889 };
+export const MOCK_LOCATION_ACCURACY_METERS = 30;
 
 const DEFAULT_REGION = {
   ...MOCK_USER_LOCATION,
@@ -33,6 +32,19 @@ export default function MapScreen() {
   const [selectedAlert, setSelectedAlert] = useState<NwsAlert | null>(null);
   const [overlayFilters, setOverlayFilters] = useState<MapOverlayFilters>(DEFAULT_MAP_OVERLAY_FILTERS);
   const [overlaySheetOpen, setOverlaySheetOpen] = useState(false);
+  const [hazardZones, setHazardZones] = useState<HazardZone[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetchHazardZones()
+      .then((zones) => {
+        if (isMounted) setHazardZones(zones);
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(
     () =>
@@ -63,6 +75,18 @@ export default function MapScreen() {
               strokeWidth={2}
               tappable
               onPress={() => setSelectedAlert(alert)}
+            />
+          ))
+        )}
+        {(overlayFilters.flooding ? hazardZones : []).flatMap((zone) =>
+          zone.polygons.map((polygon, i) => (
+            <Polygon
+              key={`zone-${zone.id}-${i}`}
+              coordinates={polygon.outer}
+              holes={polygon.holes}
+              fillColor="rgba(255,152,0,0.35)"
+              strokeColor="rgba(230,81,0,0.9)"
+              strokeWidth={2}
             />
           ))
         )}
