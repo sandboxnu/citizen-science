@@ -11,8 +11,8 @@ export const SEVERITY_LEVELS = [
   { label: 'Critical', description: 'Severe damage. Immediate danger or risk to life.' },
 ] as const;
 
-// Fill + thumb ring color for each level (index 0 = level 1, which has no fill).
-const LEVEL_COLORS = [
+const POSITION_COLORS = [
+  ReportColors.tileBorder,
   ReportColors.tileBorder,
   ReportColors.secondaryContainer,
   ReportColors.secondary,
@@ -24,23 +24,28 @@ const THUMB_SIZE = 20;
 const THUMB_BORDER = 5;
 const DOT_SIZE = 8;
 const TRACK_HEIGHT = 12;
+const UNSET_GAP = Spacing.four;
 
-type SeveritySliderProps = { value: number; onChange: (value: number) => void };
+type SeveritySliderProps = { value: number | null; onChange: (value: number | null) => void };
 
 export function SeveritySlider({ value, onChange }: SeveritySliderProps) {
-  const level = SEVERITY_LEVELS[value - 1];
+  const level = value === null ? undefined : SEVERITY_LEVELS[value - 1];
   const isCritical = value === SEVERITY_LEVELS.length;
 
   return (
     <View style={styles.container}>
       <Text style={styles.question}>How severe is the damage?</Text>
       <SliderTrack value={value} onChange={onChange} />
-      <View style={styles.levelText}>
-        <Text style={styles.levelLabel}>
-          Level {value}: <Text style={isCritical && styles.critical}>{level.label}</Text>
-        </Text>
-        <Text style={styles.levelDescription}>{level.description}</Text>
-      </View>
+      {level ? (
+        <View style={styles.levelText}>
+          <Text style={styles.levelLabel}>
+            Level {value}: <Text style={isCritical && styles.critical}>{level.label}</Text>
+          </Text>
+          <Text style={styles.levelDescription}>{level.description}</Text>
+        </View>
+      ) : (
+        <Text style={styles.unsetText}>Slide the dot to select severity</Text>
+      )}
     </View>
   );
 }
@@ -48,16 +53,27 @@ export function SeveritySlider({ value, onChange }: SeveritySliderProps) {
 function SliderTrack({ value, onChange }: SeveritySliderProps) {
   const [width, setWidth] = useState(0);
   const levels = SEVERITY_LEVELS.length;
-  const usable = Math.max(width - THUMB_SIZE, 0);
-  // Center x of each level's stop.
-  const centerFor = (level: number) => THUMB_SIZE / 2 + ((level - 1) / (levels - 1)) * usable;
-  const color = LEVEL_COLORS[value - 1];
+  // Stop 0 is "not selected"; stops 1-5 are the levels.
+  const position = value ?? 0;
+  const firstLevelX = THUMB_SIZE / 2 + UNSET_GAP;
+  const levelSpan = Math.max(width - THUMB_SIZE / 2 - firstLevelX, 0);
+  // Center x of each stop.
+  const centerFor = (stop: number) =>
+    stop === 0 ? THUMB_SIZE / 2 : firstLevelX + ((stop - 1) / (levels - 1)) * levelSpan;
+  const color = POSITION_COLORS[position];
 
+  const setPosition = (next: number) => {
+    if (next !== position) onChange(next === 0 ? null : next);
+  };
+
+  // Snap to whichever stop is closest to the touch.
   const setFromX = (x: number) => {
-    if (usable === 0) return;
-    const ratio = Math.min(Math.max((x - THUMB_SIZE / 2) / usable, 0), 1);
-    const next = Math.round(ratio * (levels - 1)) + 1;
-    if (next !== value) onChange(next);
+    if (levelSpan === 0) return;
+    let nearest = 0;
+    for (let stop = 1; stop <= levels; stop++) {
+      if (Math.abs(centerFor(stop) - x) < Math.abs(centerFor(nearest) - x)) nearest = stop;
+    }
+    setPosition(nearest);
   };
 
   return (
@@ -72,29 +88,34 @@ function SliderTrack({ value, onChange }: SeveritySliderProps) {
       accessible
       accessibilityRole="adjustable"
       accessibilityLabel="Damage severity"
-      accessibilityValue={{ min: 1, max: levels, now: value, text: `Level ${value}: ${SEVERITY_LEVELS[value - 1].label}` }}
+      accessibilityValue={{
+        min: 0,
+        max: levels,
+        now: position,
+        text: value === null ? 'Not selected' : `Level ${value}: ${SEVERITY_LEVELS[value - 1].label}`,
+      }}
       accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
       onAccessibilityAction={(e) => {
-        if (e.nativeEvent.actionName === 'increment') onChange(Math.min(value + 1, levels));
-        if (e.nativeEvent.actionName === 'decrement') onChange(Math.max(value - 1, 1));
+        if (e.nativeEvent.actionName === 'increment') setPosition(Math.min(position + 1, levels));
+        if (e.nativeEvent.actionName === 'decrement') setPosition(Math.max(position - 1, 0));
       }}>
       <View style={styles.track} pointerEvents="none" />
-      {width > 0 && value > 1 && (
+      {width > 0 && position > 0 && (
         <View
           pointerEvents="none"
-          style={[styles.fill, { width: centerFor(value) + THUMB_SIZE / 2, backgroundColor: color }]}
+          style={[styles.fill, { width: centerFor(position) + THUMB_SIZE / 2, backgroundColor: color }]}
         />
       )}
       {width > 0 &&
-        Array.from({ length: levels }, (_, i) => i + 1)
-          .filter((level) => level !== value)
-          .map((level) => (
-            <View key={level} pointerEvents="none" style={[styles.dot, { left: centerFor(level) - DOT_SIZE / 2 }]} />
+        Array.from({ length: levels + 1 }, (_, stop) => stop)
+          .filter((stop) => stop !== position)
+          .map((stop) => (
+            <View key={stop} pointerEvents="none" style={[styles.dot, { left: centerFor(stop) - DOT_SIZE / 2 }]} />
           ))}
       {width > 0 && (
         <View
           pointerEvents="none"
-          style={[styles.thumb, { left: centerFor(value) - THUMB_SIZE / 2, borderColor: color }]}
+          style={[styles.thumb, { left: centerFor(position) - THUMB_SIZE / 2, borderColor: color }]}
         />
       )}
     </View>
@@ -132,5 +153,6 @@ const styles = StyleSheet.create({
   levelText: { gap: Spacing.two },
   levelLabel: { fontFamily: FontFamily.medium, fontSize: 14, lineHeight: 16.8, color: ReportColors.textPrimary },
   critical: { color: ReportColors.required },
+  unsetText: { fontFamily: FontFamily.italic, fontSize: 14, lineHeight: 16.8, color: ReportColors.text },
   levelDescription: { fontFamily: FontFamily.regular, fontSize: 14, lineHeight: 16.8, color: ReportColors.modalText },
 });

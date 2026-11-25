@@ -1,5 +1,6 @@
 import {
   Figtree_400Regular,
+  Figtree_400Regular_Italic,
   Figtree_500Medium,
   Figtree_600SemiBold,
   Figtree_700Bold,
@@ -19,6 +20,7 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [fontsLoaded] = useFonts({
     Figtree_400Regular,
+    Figtree_400Regular_Italic,
     Figtree_500Medium,
     Figtree_600SemiBold,
     Figtree_700Bold,

@@ -11,6 +11,7 @@ import {
   EvidenceDetailsStep,
 } from '@/components/report/evidence-details-step';
 import { CloseReportButton } from '@/components/report/close-report-button';
+import { ReportReview } from '@/components/report/report-review';
 import { ReportSuccess } from '@/components/report/report-success';
 import { FontFamily, ReportColors, Spacing } from '@/constants/theme';
 import { useAuth } from '@/lib/auth-context';
@@ -121,6 +122,12 @@ export default function ReportScreen() {
   // null while choosing evidence; otherwise the index into `selectedEvidence` being filled in.
   const [detailsIndex, setDetailsIndex] = useState<number | null>(null);
   const [details, setDetails] = useState<Record<string, EvidenceDetails>>({});
+  // After the last evidence step, the user reviews everything before submitting.
+  const [reviewing, setReviewing] = useState(false);
+  // Evidence being changed from the review screen. Edits go to `draft` until saved, so Cancel discards them.
+  const [editing, setEditing] = useState<{ index: number; draft: EvidenceDetails } | null>(null);
+  // The review card to open on return from editing.
+  const [lastEdited, setLastEdited] = useState<string | null>(null);
   // Bumped on reset so updates still in flight from a deleted report (e.g. a slow location lookup) are ignored.
   const sessionRef = useRef(0);
   const [submitting, setSubmitting] = useState(false);
@@ -205,6 +212,9 @@ export default function ReportScreen() {
     setEvidenceQuery('');
     setDetails({});
     setDetailsIndex(null);
+    setReviewing(false);
+    setEditing(null);
+    setLastEdited(null);
   };
 
   const handleSubmit = async () => {
@@ -242,7 +252,7 @@ export default function ReportScreen() {
             locationSource: d.locationSource,
             observedAt: observedAt.toISOString(),
             observedAtSource: d.observedAtSource,
-            damageRating: d.damageRating ?? 1,
+            damageRating: d.damageRating,
             ...(description && { description }),
             photoUrls: await Promise.all(
               d.photos.map(async (photo) => ({
@@ -287,13 +297,78 @@ export default function ReportScreen() {
 
   if (submitted) return <ReportSuccess onDone={handleSuccessDone} />;
 
+  // Photos added to the report's other evidence, offered as "Previous uploads".
+  const previousPhotosFor = (value: string) =>
+    selectedEvidence
+      .filter((e) => e.value !== value)
+      .flatMap((e) => details[e.value]?.photos ?? [])
+      .filter((photo, i, all) => all.findIndex((p) => p.uri === photo.uri) === i);
+
+  const editingEvidence = editing ? selectedEvidence[editing.index] : undefined;
+  if (editing && editingEvidence) {
+    const session = sessionRef.current;
+    const saved = details[editingEvidence.value];
+    const closeEditor = () => {
+      setLastEdited(editingEvidence.value);
+      setEditing(null);
+    };
+    return (
+      <EvidenceDetailsStep
+        key={`edit-${editingEvidence.value}`}
+        mode="edit"
+        title={editingEvidence.title}
+        disasterLabel={selectedType?.label ?? ''}
+        step={editing.index + 1}
+        totalSteps={selectedEvidence.length}
+        details={editing.draft}
+        hasChanges={editing.draft !== saved}
+        previousPhotos={previousPhotosFor(editingEvidence.value)}
+        onChange={(draft) => {
+          if (session !== sessionRef.current) return;
+          setEditing((current) => current && { ...current, draft });
+        }}
+        onBack={closeEditor}
+        onNext={() => {
+          setDetails((current) => ({ ...current, [editingEvidence.value]: editing.draft }));
+          closeEditor();
+        }}
+      />
+    );
+  }
+
+  if (reviewing) {
+    return (
+      <ReportReview
+        disasterLabel={selectedType?.label ?? ''}
+        evidence={selectedEvidence.map((e) => ({
+          value: e.value,
+          title: e.title,
+          // Evidence the user typed in has no icon of its own, so it takes the disaster type's.
+          icon:
+            EVIDENCE_OPTIONS[disasterType ?? 'flooding'].find((o) => o.value === e.value)?.icon ??
+            selectedType?.icon ??
+            DISASTER_TYPES[0].icon,
+          details: details[e.value] ?? emptyEvidenceDetails(),
+        }))}
+        initiallyExpanded={lastEdited}
+        submitting={submitting}
+        onEdit={(index) => {
+          const value = selectedEvidence[index].value;
+          setEditing({ index, draft: details[value] ?? emptyEvidenceDetails() });
+        }}
+        onBack={() => {
+          setReviewing(false);
+          setLastEdited(null);
+          setDetailsIndex(selectedEvidence.length - 1);
+        }}
+        onSubmit={handleSubmit}
+      />
+    );
+  }
+
   const currentEvidence = detailsIndex !== null ? selectedEvidence[detailsIndex] : undefined;
   if (currentEvidence && detailsIndex !== null) {
     const isLast = detailsIndex === selectedEvidence.length - 1;
-    const previousPhotos = selectedEvidence
-      .filter((e) => e.value !== currentEvidence.value)
-      .flatMap((e) => details[e.value]?.photos ?? [])
-      .filter((photo, i, all) => all.findIndex((p) => p.uri === photo.uri) === i);
     const session = sessionRef.current;
     return (
       <>
@@ -304,8 +379,7 @@ export default function ReportScreen() {
           step={detailsIndex + 1}
           totalSteps={selectedEvidence.length}
           details={details[currentEvidence.value] ?? emptyEvidenceDetails()}
-          previousPhotos={previousPhotos}
-          submitting={submitting}
+          previousPhotos={previousPhotosFor(currentEvidence.value)}
           onChange={(next) => {
             if (session !== sessionRef.current) return;
             setDetails((current) => ({
@@ -315,8 +389,12 @@ export default function ReportScreen() {
           }}
           onBack={() => setDetailsIndex(detailsIndex === 0 ? null : detailsIndex - 1)}
           onNext={() => {
-            if (isLast) handleSubmit();
-            else setDetailsIndex(detailsIndex + 1);
+            if (isLast) {
+              setDetailsIndex(null);
+              setReviewing(true);
+            } else {
+              setDetailsIndex(detailsIndex + 1);
+            }
           }}
           onClose={handleClose}
         />
