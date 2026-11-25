@@ -54,7 +54,7 @@ export type Concern = {
   locationSource: LocationSource;
   observedAt: string; // auto-captured, user-editable in the UI
   observedAtSource: ObservedAtSource;
-  damageRating: number; // required, 1-5
+  damageRating: number | null; 
   description?: string; // optional
   photoUrls: { url: string; latitude: number; longitude: number }[]; // already-uploaded Storage URLs and locations, multiple per concern
 };

@@ -19,6 +19,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CloseReportButton } from '@/components/report/close-report-button';
+import { EditButton } from '@/components/report/edit-button';
 import { EditLocationModal } from '@/components/report/edit-location-modal';
 import { EditTimeModal } from '@/components/report/edit-time-modal';
 import { type PhotoSource, PhotoSourceSheet } from '@/components/report/photo-source-sheet';
@@ -44,7 +45,7 @@ export type EvidenceDetails = {
   observedAt: Date | null;
   observedAtSource: ValueSource;
   description: string;
-  damageRating: number; // 1-5
+  damageRating: number | null; // 1-5, or null if the user didn't pick one
 };
 
 // The location and time a photo supplies: its own GPS and capture time, or the device's location and the current
@@ -63,7 +64,7 @@ export const emptyEvidenceDetails = (): EvidenceDetails => ({
   observedAt: null,
   observedAtSource: 'photo',
   description: '',
-  damageRating: 1,
+  damageRating: null,
 });
 
 export const isEvidenceDetailsComplete = (details: EvidenceDetails) =>
@@ -86,11 +87,12 @@ type EvidenceDetailsStepProps = {
   details: EvidenceDetails;
   /** Photos added to the report's other evidence, offered as "Previous uploads". */
   previousPhotos: ReportPhoto[];
-  submitting?: boolean;
+  mode?: 'create' | 'edit';
+  hasChanges?: boolean;
   onChange: (details: EvidenceDetails) => void;
   onBack: () => void;
   onNext: () => void;
-  onClose: () => void;
+  onClose?: () => void;
 };
 
 export function EvidenceDetailsStep({
@@ -100,7 +102,8 @@ export function EvidenceDetailsStep({
   totalSteps,
   details,
   previousPhotos,
-  submitting = false,
+  mode = 'create',
+  hasChanges = false,
   onChange,
   onBack,
   onNext,
@@ -115,8 +118,10 @@ export function EvidenceDetailsStep({
   // iOS can't present a picker or another modal until the current one has finished dismissing.
   const afterDismiss = useRef<(() => void) | null>(null);
 
-  const nextLabel = step === totalSteps ? 'Submit' : 'Next';
-  const canContinue = isEvidenceDetailsComplete(details) && !loadingPhotos && !submitting;
+  const editing = mode === 'edit';
+  const nextLabel = editing ? 'Save Changes' : 'Next';
+  const backLabel = editing ? 'Cancel' : 'Back';
+  const canContinue = isEvidenceDetailsComplete(details) && !loadingPhotos && (!editing || hasChanges);
   const remaining = MAX_PHOTOS - details.photos.length;
   const availablePrevious = previousPhotos.filter((p) => !details.photos.some((own) => own.uri === p.uri));
 
@@ -258,7 +263,7 @@ export function EvidenceDetailsStep({
             <Text style={styles.title} accessibilityRole="header">
               Disaster Report
             </Text>
-            <CloseReportButton onPress={onClose} disabled={submitting} />
+            {onClose && <CloseReportButton onPress={onClose} />}
           </View>
           <Text style={styles.requiredNote}>*Required</Text>
         </View>
@@ -355,21 +360,16 @@ export function EvidenceDetailsStep({
       </ScrollView>
 
       <View style={styles.actions}>
-        <Pressable style={styles.backButton} onPress={onBack} disabled={submitting} accessibilityRole="button">
-          <Text style={styles.backText}>Back</Text>
+        <Pressable style={styles.backButton} onPress={onBack} accessibilityRole="button">
+          <Text style={styles.backText}>{backLabel}</Text>
         </Pressable>
         <Pressable
           style={[styles.nextButton, canContinue ? styles.nextEnabled : styles.nextDisabled]}
           onPress={onNext}
           disabled={!canContinue}
           accessibilityRole="button"
-          accessibilityLabel={submitting ? 'Submitting report' : nextLabel}
-          accessibilityState={{ disabled: !canContinue, busy: submitting }}>
-          {submitting ? (
-            <ActivityIndicator color={ReportColors.onPrimary} />
-          ) : (
-            <Text style={styles.nextText}>{nextLabel}</Text>
-          )}
+          accessibilityState={{ disabled: !canContinue }}>
+          <Text style={styles.nextText}>{nextLabel}</Text>
         </Pressable>
       </View>
 
@@ -457,14 +457,7 @@ function EditableField({ label, source, value, onEdit }: EditableFieldProps) {
       ) : (
         <View style={styles.valueRow}>
           <Text style={styles.fieldValue}>{value}</Text>
-          <Pressable
-            style={styles.editButton}
-            onPress={onEdit}
-            accessibilityRole="button"
-            accessibilityLabel={`Edit ${label.toLowerCase()}`}>
-            <Image source={require('@/assets/images/reportIcons/edit.svg')} style={styles.editIcon} />
-            <Text style={styles.editText}>Edit</Text>
-          </Pressable>
+          <EditButton onPress={onEdit} accessibilityLabel={`Edit ${label.toLowerCase()}`} />
         </View>
       )}
     </View>
@@ -487,10 +480,10 @@ async function getCurrentCoordinates(): Promise<Coordinates | null> {
   }
 }
 
-const formatCoordinates = ({ latitude, longitude }: Coordinates) => `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+export const formatCoordinates = ({ latitude, longitude }: Coordinates) => `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
 
 // e.g. "Nov. 12, 05:43 PM" (May is already short, so it gets no period).
-const formatTime = (date: Date) => {
+export const formatTime = (date: Date) => {
   const month = date.toLocaleDateString('en-US', { month: 'short' });
   const time = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
   return `${month}${month === 'May' ? '' : '.'} ${date.getDate()}, ${time}`;
@@ -620,23 +613,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 19.2,
     color: ReportColors.modalText,
-  },
-  editButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.two,
-    paddingHorizontal: Spacing.seven,
-    paddingVertical: Spacing.two,
-    borderWidth: 1,
-    borderRadius: 500,
-    borderColor: ReportColors.title,
-    backgroundColor: ReportColors.surface,
-  },
-  editIcon: { width: 13, height: 13 },
-  editText: {
-    fontFamily: FontFamily.regular,
-    fontSize: 12,
-    color: ReportColors.title,
   },
   input: {
     minHeight: 37,

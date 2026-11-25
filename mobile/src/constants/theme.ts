@@ -230,6 +230,7 @@ export const Fonts = Platform.select({
 // `fontFamily` to the weight you want instead of using `fontWeight`.
 export const FontFamily = {
   regular: 'Figtree_400Regular',
+  italic: 'Figtree_400Regular_Italic',
   medium: 'Figtree_500Medium',
   semiBold: 'Figtree_600SemiBold',
   bold: 'Figtree_700Bold',
