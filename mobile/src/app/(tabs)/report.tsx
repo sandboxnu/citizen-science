@@ -20,6 +20,7 @@ import {
   deleteReportPhotos,
   isKnownConcernType,
   type KnownConcernType,
+  MAX_CONCERNS,
   submitPostDisasterReport,
   toConcernType,
   uploadReportPhoto,
@@ -134,6 +135,7 @@ export default function ReportScreen() {
   const [submitted, setSubmitted] = useState(false);
 
   const canContinue = disasterType !== null && evidence.length > 0;
+  const atEvidenceLimit = evidence.length >= MAX_CONCERNS;
   const showEvidenceOptions = evidence.length === 0 || searchFocused;
   const selectedType = DISASTER_TYPES.find((type) => type.value === disasterType);
 
@@ -170,14 +172,19 @@ export default function ReportScreen() {
   };
 
   const toggleEvidence = (value: string) => {
-    setEvidence((current) => (current.includes(value) ? current.filter((v) => v !== value) : [...current, value]));
+    setEvidence((current) => {
+      if (current.includes(value)) return current.filter((v) => v !== value);
+      return current.length < MAX_CONCERNS ? [...current, value] : current;
+    });
     setEvidenceQuery('');
     searchInputRef.current?.blur();
   };
 
   const addCustomEvidence = () => {
     const value = isKnownConcernType(queryType) ? queryType : `${CUSTOM_EVIDENCE_PREFIX}${trimmedQuery}`;
-    setEvidence((current) => (current.includes(value) ? current : [...current, value]));
+    setEvidence((current) =>
+      current.includes(value) || current.length >= MAX_CONCERNS ? current : [...current, value],
+    );
     setEvidenceQuery('');
     searchInputRef.current?.blur();
   };
@@ -225,6 +232,15 @@ export default function ReportScreen() {
       return d?.location && d.observedAt ? [{ evidence: e, details: d, location: d.location, observedAt: d.observedAt }] : [];
     });
     if (evidenceDetails.length === 0 || evidenceDetails.length !== selectedEvidence.length) return;
+    // Checked before any photos upload, since the database would reject the report anyway.
+    if (evidenceDetails.length > MAX_CONCERNS) {
+      const extra = evidenceDetails.length - MAX_CONCERNS;
+      Alert.alert(
+        'Too much evidence',
+        `A report can include up to ${MAX_CONCERNS} pieces of evidence. Remove ${extra} to submit.`,
+      );
+      return;
+    }
 
     setSubmitting(true);
     const uploadedPaths: string[] = [];
@@ -233,10 +249,7 @@ export default function ReportScreen() {
       const uploadOnce = (uri: string) => {
         let upload = uploads.get(uri);
         if (!upload) {
-          upload = uploadReportPhoto(user.uid, uri).then(({ url, path }) => {
-            uploadedPaths.push(path);
-            return url;
-          });
+          upload = uploadReportPhoto(user.uid, uri, (path) => uploadedPaths.push(path)).then(({ url }) => url);
           uploads.set(uri, upload);
         }
         return upload;
@@ -529,7 +542,12 @@ export default function ReportScreen() {
               />
             </View>
 
-            {showEvidenceOptions && (
+            {showEvidenceOptions && atEvidenceLimit && (
+              <Text style={styles.emptyText}>
+                You can add up to {MAX_CONCERNS} pieces of evidence. Remove one to add another.
+              </Text>
+            )}
+            {showEvidenceOptions && !atEvidenceLimit && (
               <View>
                 {evidenceOptions.map((option, index) => (
                   <EvidenceRow

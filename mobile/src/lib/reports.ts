@@ -21,6 +21,9 @@ export type SubmitDuringDisasterReportInput = {
 };
 
 
+// Most concerns one post-disaster report can hold. Must match the cap in firebase/firestore.rules.
+export const MAX_CONCERNS = 20;
+
 export const KNOWN_CONCERN_TYPES = [
   "high_waterline",
   "standing_water",
@@ -75,6 +78,9 @@ export async function submitPostDisasterReport(
     }
     if (input.userId !== currentUser.uid) {
       throw new Error('userId does not match the signed-in user');
+    }
+    if (input.concerns.length === 0 || input.concerns.length > MAX_CONCERNS) {
+      throw new Error(`A report must have 1-${MAX_CONCERNS} concerns, got ${input.concerns.length}`);
     }
     const concerns = input.concerns.map((c) => {
       const observedAt = new Date(c.observedAt);
@@ -150,13 +156,19 @@ export type UploadedReportPhoto = { url: string; path: string };
 
 // Uploads a local photo to reports/{uid}/ in Storage and returns its download URL, plus its path so a failed
 // submission can delete it again.
-export async function uploadReportPhoto(userId: string, localUri: string): Promise<UploadedReportPhoto> {
+
+export async function uploadReportPhoto(
+  userId: string,
+  localUri: string,
+  onStored?: (path: string) => void,
+): Promise<UploadedReportPhoto> {
   const extension = localUri.split('?')[0].split('.').pop()?.toLowerCase() ?? '';
   const contentType = CONTENT_TYPES[extension] ?? 'image/jpeg';
   const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${extension in CONTENT_TYPES ? extension : 'jpg'}`;
   const path = `reports/${userId}/${fileName}`;
   const photoRef = ref(storage, path);
   await putFile(photoRef, localUri, { contentType });
+  onStored?.(path);
   return { url: await getDownloadURL(photoRef), path };
 }
 

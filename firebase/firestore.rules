@@ -86,12 +86,35 @@ service cloud.firestore {
               || (data.description is string && data.description.size() <= 2000));
       }
 
-      // Location and observation time live on each concern. Rules can't iterate lists, so individual
-      // concerns (and those per-concern fields) aren't validated.
+      // The observation fields on one entry of a post-disaster report's `concerns` list.
+      function isConcern(c) {
+        return c.location is latlng
+          && c.locationSource in ['photo', 'current', 'edited']
+          && c.observedAt is timestamp
+          && c.observedAtSource in ['photo', 'current', 'edited'];
+      }
+
+      // Concern `i`, if the list is that long. Rules can't loop, so each index up to the 20-concern
+      // cap is checked explicitly.
+      function isConcernAt(concerns, i) {
+        return concerns.size() <= i || isConcern(concerns[i]);
+      }
+
+      // Location and observation time live on each concern.
       function isPostDisasterReport(data) {
         return data.keys().hasOnly(['userId', 'disasterType', 'createdAt', 'concerns'])
           && data.keys().hasAll(['userId', 'disasterType', 'createdAt', 'concerns'])
-          && data.concerns is list && data.concerns.size() > 0 && data.concerns.size() <= 20;
+          && data.concerns is list && data.concerns.size() > 0 && data.concerns.size() <= 20
+          && isConcernAt(data.concerns, 0) && isConcernAt(data.concerns, 1)
+          && isConcernAt(data.concerns, 2) && isConcernAt(data.concerns, 3)
+          && isConcernAt(data.concerns, 4) && isConcernAt(data.concerns, 5)
+          && isConcernAt(data.concerns, 6) && isConcernAt(data.concerns, 7)
+          && isConcernAt(data.concerns, 8) && isConcernAt(data.concerns, 9)
+          && isConcernAt(data.concerns, 10) && isConcernAt(data.concerns, 11)
+          && isConcernAt(data.concerns, 12) && isConcernAt(data.concerns, 13)
+          && isConcernAt(data.concerns, 14) && isConcernAt(data.concerns, 15)
+          && isConcernAt(data.concerns, 16) && isConcernAt(data.concerns, 17)
+          && isConcernAt(data.concerns, 18) && isConcernAt(data.concerns, 19);
       }
 
       allow create: if request.auth != null

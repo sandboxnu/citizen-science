@@ -11,8 +11,8 @@ export const SEVERITY_LEVELS = [
   { label: 'Critical', description: 'Severe damage. Immediate danger or risk to life.' },
 ] as const;
 
-const POSITION_COLORS = [
-  ReportColors.tileBorder,
+// Fill + thumb ring color for each level (index 0 = level 1, which has no fill).
+const LEVEL_COLORS = [
   ReportColors.tileBorder,
   ReportColors.secondaryContainer,
   ReportColors.secondary,
@@ -24,9 +24,12 @@ const THUMB_SIZE = 20;
 const THUMB_BORDER = 5;
 const DOT_SIZE = 8;
 const TRACK_HEIGHT = 12;
+// Before a level is picked, the thumb sits on an extra "not selected" stop at the far left, this far before level 1.
+// Once a level is picked that stop goes away and levels 1-5 spread across the whole track.
 const UNSET_GAP = Spacing.four;
 
-type SeveritySliderProps = { value: number | null; onChange: (value: number | null) => void };
+/** `value` is the severity level (1-5), or null until the user picks one. */
+type SeveritySliderProps = { value: number | null; onChange: (value: number) => void };
 
 export function SeveritySlider({ value, onChange }: SeveritySliderProps) {
   const level = value === null ? undefined : SEVERITY_LEVELS[value - 1];
@@ -38,8 +41,8 @@ export function SeveritySlider({ value, onChange }: SeveritySliderProps) {
       <SliderTrack value={value} onChange={onChange} />
       {level ? (
         <View style={styles.levelText}>
-          <Text style={styles.levelLabel}>
-            Level {value}: <Text style={isCritical && styles.critical}>{level.label}</Text>
+          <Text style={[styles.levelLabel, isCritical && styles.critical]}>
+            Level {value}: {level.label}
           </Text>
           <Text style={styles.levelDescription}>{level.description}</Text>
         </View>
@@ -53,27 +56,31 @@ export function SeveritySlider({ value, onChange }: SeveritySliderProps) {
 function SliderTrack({ value, onChange }: SeveritySliderProps) {
   const [width, setWidth] = useState(0);
   const levels = SEVERITY_LEVELS.length;
-  // Stop 0 is "not selected"; stops 1-5 are the levels.
-  const position = value ?? 0;
-  const firstLevelX = THUMB_SIZE / 2 + UNSET_GAP;
+  const unset = value === null;
+  const firstLevelX = THUMB_SIZE / 2 + (unset ? UNSET_GAP : 0);
   const levelSpan = Math.max(width - THUMB_SIZE / 2 - firstLevelX, 0);
-  // Center x of each stop.
-  const centerFor = (stop: number) =>
-    stop === 0 ? THUMB_SIZE / 2 : firstLevelX + ((stop - 1) / (levels - 1)) * levelSpan;
-  const color = POSITION_COLORS[position];
+  // Center x of each level's stop.
+  const centerFor = (level: number) => firstLevelX + ((level - 1) / (levels - 1)) * levelSpan;
+  const thumbX = unset ? THUMB_SIZE / 2 : centerFor(value);
+  const color = unset ? ReportColors.tileBorder : LEVEL_COLORS[value - 1];
 
-  const setPosition = (next: number) => {
-    if (next !== position) onChange(next === 0 ? null : next);
+  const select = (next: number) => {
+    if (next !== value) onChange(next);
   };
 
-  // Snap to whichever stop is closest to the touch.
+  // Snap to whichever stop is closest to the touch. While unset, staying on the "not selected" stop keeps it unset.
   const setFromX = (x: number) => {
     if (levelSpan === 0) return;
-    let nearest = 0;
-    for (let stop = 1; stop <= levels; stop++) {
-      if (Math.abs(centerFor(stop) - x) < Math.abs(centerFor(nearest) - x)) nearest = stop;
+    let nearest: number | null = unset ? null : 1;
+    let nearestDistance = unset ? Math.abs(THUMB_SIZE / 2 - x) : Math.abs(centerFor(1) - x);
+    for (let level = 1; level <= levels; level++) {
+      const distance = Math.abs(centerFor(level) - x);
+      if (distance < nearestDistance) {
+        nearest = level;
+        nearestDistance = distance;
+      }
     }
-    setPosition(nearest);
+    if (nearest !== null) select(nearest);
   };
 
   return (
@@ -91,32 +98,26 @@ function SliderTrack({ value, onChange }: SeveritySliderProps) {
       accessibilityValue={{
         min: 0,
         max: levels,
-        now: position,
-        text: value === null ? 'Not selected' : `Level ${value}: ${SEVERITY_LEVELS[value - 1].label}`,
+        now: value ?? 0,
+        text: unset ? 'Not selected' : `Level ${value}: ${SEVERITY_LEVELS[value - 1].label}`,
       }}
       accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
       onAccessibilityAction={(e) => {
-        if (e.nativeEvent.actionName === 'increment') setPosition(Math.min(position + 1, levels));
-        if (e.nativeEvent.actionName === 'decrement') setPosition(Math.max(position - 1, 0));
+        if (e.nativeEvent.actionName === 'increment') select(Math.min((value ?? 0) + 1, levels));
+        if (e.nativeEvent.actionName === 'decrement' && !unset) select(Math.max(value - 1, 1));
       }}>
       <View style={styles.track} pointerEvents="none" />
-      {width > 0 && position > 0 && (
-        <View
-          pointerEvents="none"
-          style={[styles.fill, { width: centerFor(position) + THUMB_SIZE / 2, backgroundColor: color }]}
-        />
+      {width > 0 && !unset && value > 1 && (
+        <View pointerEvents="none" style={[styles.fill, { width: thumbX + THUMB_SIZE / 2, backgroundColor: color }]} />
       )}
       {width > 0 &&
-        Array.from({ length: levels + 1 }, (_, stop) => stop)
-          .filter((stop) => stop !== position)
-          .map((stop) => (
-            <View key={stop} pointerEvents="none" style={[styles.dot, { left: centerFor(stop) - DOT_SIZE / 2 }]} />
+        Array.from({ length: levels }, (_, i) => i + 1)
+          .filter((level) => level !== value)
+          .map((level) => (
+            <View key={level} pointerEvents="none" style={[styles.dot, { left: centerFor(level) - DOT_SIZE / 2 }]} />
           ))}
       {width > 0 && (
-        <View
-          pointerEvents="none"
-          style={[styles.thumb, { left: centerFor(position) - THUMB_SIZE / 2, borderColor: color }]}
-        />
+        <View pointerEvents="none" style={[styles.thumb, { left: thumbX - THUMB_SIZE / 2, borderColor: color }]} />
       )}
     </View>
   );
